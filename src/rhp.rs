@@ -110,6 +110,30 @@ impl<'a> DEFINE<'_>{
 
         parsed
     }
+
+    /// Processed a stream of HTML tokens, to apply custom elements
+    fn process_stream(html_stream : Vec<HTMLEnum<'a>>, custom_tags : &Vec<DEFINE<'a>>) -> Vec<HTMLEnum<'a>>{
+
+        let mut processed = vec![];
+
+        for node in html_stream{
+            match node{
+                Element(mut html_element) => {
+                    if let Some(tag) = custom_tags.iter().find(|elem| elem.tagname == html_element.name){
+                        processed.append(&mut tag.apply_to(tag.contents.clone(), html_element));
+                    }
+                    else{
+                        html_element.children = Self::process_stream(html_element.children, custom_tags);
+                        processed.push(Element(html_element));
+                    }
+
+                }
+                any_other => { processed.push(any_other); }
+            }
+        }
+
+        processed
+    }
 }
 
 impl<'a> HTMLDocument<'_>{
@@ -124,24 +148,8 @@ impl<'a> HTMLDocument<'_>{
             custom_tags.push(d);
         }
 
-        //REPLACE HERE
-        let mut processed = vec![];
-
-        for token in document_tokens{
-            match token{
-                Element(mut html) => {
-                    match custom_tags.iter().find(|&tag| tag.tagname == html.name){
-                        Some(tag) => {
-                            processed.append(&mut tag.apply_to(tag.contents.clone(), html));
-                        }
-                        None => {
-                            processed.push(Element(html));
-                        }
-                    }
-                }
-                any => { processed.push(any) }
-            }
-        }
+        //APPLY CUSTOM ELEMENTS
+        let processed = DEFINE::process_stream(document_tokens, &custom_tags);
 
         let document = HTMLDocument::from_tokens(processed);
         return Ok(document);

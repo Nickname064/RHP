@@ -5,7 +5,7 @@ mod rtml;
 mod rhp;
 
 fn main() {
-    match fs::read_to_string(r#"C:\Users\wanth\Documents\GitHub\RHP\DEBUG.html"#){
+    match fs::read_to_string(r#"C:\Users\wanth\Documents\GitHub\RHP\DEBUG.rhp"#){
         Ok(str) => {
 
             let doc = HTMLDocument::from_rhp(&str).unwrap();

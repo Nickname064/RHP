@@ -1,0 +1,7 @@
+<define tagname="hello">
+    <div>THIS IS THE LAST OF MY HAMON !</div>
+</define>
+
+<div>
+    <hello/>
+</div>

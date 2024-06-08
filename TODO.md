@@ -1,5 +1,5 @@
 # TODO
 
-- [] Implement basic Custom Elements
-- [] Implement Element Args
-- [] Implement Element Child selectors
+- [X] Implement basic Custom Elements
+- [] Implement child selectors
+- [] Implement class/attribute propagation
