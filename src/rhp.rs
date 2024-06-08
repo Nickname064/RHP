@@ -9,6 +9,7 @@ const directive_names : &[&str] = &[
     //"insert" //Insert the contents of another page here
 ];
 
+#[derive(Clone)]
 struct DEFINE<'a> {
     ///The name(identifier) of the custom tag
     pub tagname: String,
@@ -83,7 +84,7 @@ impl<'a> DEFINE<'_>{
 
     /// Filters all the elements of list(containing the custom tag contents)
     /// to apply modifiers corresponding to the tag invocation.
-    fn apply_to(&self, list : Vec<HTMLEnum<'a>>, mut tag_invocation : HTMLElement<'a>) -> Vec<HTMLEnum<'a>>{
+    fn apply_to(&self, list : Vec<HTMLEnum<'a>>, tag_invocation : HTMLElement<'a>) -> Vec<HTMLEnum<'a>>{
 
         let mut parsed = vec![];
 
@@ -134,6 +135,75 @@ impl<'a> DEFINE<'_>{
 
         processed
     }
+
+    /// Taking in a DEFINE statement, and a list of the exising custom element,
+    /// returns the dependency list of the given unprocessed DEFINE statement
+    /// On a processed DEFINE statement, get_dependencies will return an empty vec
+    fn get_dependencies(&self, custom_tags : &'a Vec<DEFINE<'a>>) -> Vec<String>{
+        let mut dependencies = vec![];
+        let mut possible_deps: Vec<&'a str> = custom_tags.iter().map(|x| x.tagname.as_str()).collect();
+
+        for node in &self.contents{
+            match node{
+                Element(html) => {
+                    for rec in html.rec_html_children(){
+                        if let Some(index) = possible_deps.iter().position(|&x| x == rec.name) {
+                            dependencies.push(String::from(rec.name));
+                            possible_deps.swap_remove(index);
+                        }
+                    }
+                }
+                any => {}
+            }
+        }
+
+        dependencies
+    }
+
+    /// Replaces custom elements in defined custom elements.
+    /// Allows for recursive custom elements
+    fn compile(custom_tags: Vec<DEFINE<'a>>) -> Vec<DEFINE<'a>>{
+
+        //Build dependency list
+        let mut dependencies : Vec<(DEFINE<'a>, Vec<String>)> = vec![];
+        let mut clean: Vec<DEFINE<'a>> = vec![];
+
+        for elem in &custom_tags {
+            let elem_cp = elem.clone();
+            dependencies.push((elem_cp, elem.get_dependencies(&custom_tags)))
+        }
+
+        loop {
+
+            //Split the vectors into two groups
+            let mut ripe = vec![];
+            let mut unripe = vec![];
+
+            // Pop an element
+            while let Some((tag, deps)) = dependencies.pop(){
+                if deps.is_empty(){
+                    ripe.push(tag);
+                } else{
+                    unripe.push((tag, deps));
+                }
+            }
+
+            let ripe_names : Vec<&String> = ripe.iter().map(|x| &x.tagname).collect();
+
+            //Empty unripe vector
+            while let Some((mut tag, mut deps)) = unripe.pop(){
+                deps.retain(|x| !ripe_names.contains(&x));
+                tag.contents = Self::process_stream(tag.contents, &ripe);
+                dependencies.push((tag, deps));
+            }
+
+            clean.extend(ripe);
+
+            if dependencies.is_empty(){ break; }
+        }
+
+        clean
+    }
 }
 
 impl<'a> HTMLDocument<'_>{
@@ -147,6 +217,8 @@ impl<'a> HTMLDocument<'_>{
             let Directives::DEFINE(d) = dir;
             custom_tags.push(d);
         }
+
+        custom_tags = DEFINE::compile(custom_tags);
 
         //APPLY CUSTOM ELEMENTS
         let processed = DEFINE::process_stream(document_tokens, &custom_tags);

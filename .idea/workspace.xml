@@ -7,15 +7,16 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="30cbb849-498c-4ce7-89ce-b1286e2864dd" name="Changes" comment="First working version, simply define custom tags and replace them, while passing the children">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="30cbb849-498c-4ce7-89ce-b1286e2864dd" name="Changes" comment="Code refactor mostly in rhp.rs and document.rs">
+      <change afterPath="$PROJECT_DIR$/src/hqueries.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DEBUG.html" beforeDir="false" afterPath="$PROJECT_DIR$/DEBUG.rhp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DEBUG.rhp" beforeDir="false" afterPath="$PROJECT_DIR$/DEBUG.rhp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rhp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rhp.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rtml/document.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/document.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rtml/html_elements.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/html_elements.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rtml/parse.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/parse.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -123,7 +124,8 @@
       <workItem from="1717768164298" duration="13532000" />
       <workItem from="1717783752975" duration="1000000" />
       <workItem from="1717784788197" duration="5818000" />
-      <workItem from="1717827273975" duration="5308000" />
+      <workItem from="1717827273975" duration="24330000" />
+      <workItem from="1717871763991" duration="1801000" />
     </task>
     <task id="LOCAL-00001" summary="First working version, simply define custom tags and replace them, while passing the children">
       <option name="closed" value="true" />
@@ -133,7 +135,15 @@
       <option name="project" value="LOCAL" />
       <updated>1717830397625</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Code refactor mostly in rhp.rs and document.rs">
+      <option name="closed" value="true" />
+      <created>1717834902823</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1717834902823</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -141,20 +151,16 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="First working version, simply define custom tags and replace them, while passing the children" />
-    <option name="LAST_COMMIT_MESSAGE" value="First working version, simply define custom tags and replace them, while passing the children" />
+    <MESSAGE value="Code refactor mostly in rhp.rs and document.rs" />
+    <option name="LAST_COMMIT_MESSAGE" value="Code refactor mostly in rhp.rs and document.rs" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/rhp.rs</url>
-          <line>91</line>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/rtml/document.rs</url>
-          <line>49</line>
-          <option name="timeStamp" value="6" />
+          <line>213</line>
+          <option name="timeStamp" value="18" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

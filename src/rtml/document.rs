@@ -12,6 +12,8 @@ pub struct HTMLDocument<'a>{
 
 impl<'a> HTMLDocument<'_>{
 
+    /// Parses a stream of standard HTML Tokens, and creates a fixed document from it,
+    /// correcting head elements not being in the head, and body elements not being in the body
     fn recursive_sort(
         elements : Vec<HTMLEnum<'a>>,
         head : &mut HTMLElement<'a>,

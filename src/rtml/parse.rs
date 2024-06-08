@@ -127,7 +127,7 @@ pub fn parse<'a>(mut document: &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserError
                             //First character matches
 
                             //Lets see up until where the string matches
-                            match find_from!(document, index + 2, |x| !matches!(x, 'A'..='Z' | 'a'..='z' | '_')){
+                            match find_from!(document, index + 2, |x| !matches!(x, 'A'..='Z' | 'a'..='z' | '_' | '-' | '0' ..= '9')){
                                 Some(i) => {
                                     //Found a name end
                                     name = Some(&document[index + 1 .. i]); //Transfer the name
@@ -498,10 +498,9 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                         }
                     }
 
-                    'A'..='Z' | 'a'..='z' | '_' | '-' | '&' => {
+                    'A'..='Z' | 'a'..='z' => {
 
                         //Alphabetic
-
                         if let Mode::Alpha(_) = mode {/* NO OPERATION */} else {
                             mode = Mode::Alpha(index);
                         }
@@ -516,7 +515,9 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                         }
                     }
 
-                    _ => { todo!("Unexpected char") }
+                    '0' ..= '9'| '_' | '-' | '&' if matches!(mode, Mode::Alpha(_)) => { continue; }
+
+                    other_char => { panic!("Unexpected char : {}", other_char) }
                 }
             }
         }

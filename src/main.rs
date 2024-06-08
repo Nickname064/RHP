@@ -3,6 +3,7 @@ use crate::rtml::document::HTMLDocument;
 
 mod rtml;
 mod rhp;
+mod hqueries;
 
 fn main() {
     match fs::read_to_string(r#"C:\Users\wanth\Documents\GitHub\RHP\DEBUG.rhp"#){

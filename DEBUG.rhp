@@ -1,7 +1,13 @@
-<define tagname="hello">
-    <div>THIS IS THE LAST OF MY HAMON !</div>
+<define tagname="custom-1">
+    <h1>Ceci est un titre</h1>
+    <div><children/></div>
+</define>
+
+<define tagname="custom-2">
+    <custom-1/>
+    <h1>Ceci est un autre titre</h1>
 </define>
 
 <div>
-    <hello/>
+    <custom-2/>
 </div>
