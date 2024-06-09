@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+
 use std::fmt::{Display, Formatter};
 use super::html_elements::{HTMLElement, HTMLEnum};
 use super::parse::{parse, ParserError};
@@ -10,8 +10,9 @@ pub struct HTMLDocument<'a>{
     body : HTMLElement<'a>,
 }
 
-impl<'a> HTMLDocument<'_>{
+impl<'a> HTMLDocument<'a>{
 
+    /*
     /// Parses a stream of standard HTML Tokens, and creates a fixed document from it,
     /// correcting head elements not being in the head, and body elements not being in the body
     fn recursive_sort(
@@ -19,46 +20,48 @@ impl<'a> HTMLDocument<'_>{
         head : &mut HTMLElement<'a>,
         body : &mut HTMLElement<'a>){
 
+
+        let head_nodes : &[&str] = &[ //These nodes are only valid in the head
+            "title",
+            "base",
+            "link",
+            "meta",
+            "style",
+            "script",
+            "noscript",
+            "template",
+            "object"
+        ];
+
+        let ignored = &["head", "body"];
+
+
         for elem in elements{
             //Recursively add stuff
 
             match elem{
                 HTMLEnum::Comment(_) => { /* IGNORE COMMENTS */ }
                 HTMLEnum::Text(text) => {
-                    body.add_text(text);
+                    {body.add_text(text);}
                 }
                 HTMLEnum::Element(mut html_node) => {
                     //Figure out if its contents go to head or body
                     //Do the same to children
 
-                    let head_nodes : &[&str] = &[//These nodes are only valid in the head
-                        "title",
-                        "base",
-                        "link",
-                        "meta",
-                        "style",
-                        "script",
-                        "noscript",
-                        "template",
-                        "object"
-                    ];
-
-                    let ignored = &["head", "body"];
-
-                    let children = html_node.children;
+                    let children = std::mem::take(&mut html_node.children);
                     html_node.children = vec![];
 
                     let to_head : bool = head_nodes.contains(&html_node.name());
                     let ignore : bool = ignored.contains(&html_node.name());
 
-                    if(to_head){
+                    if to_head {
                         Self::recursive_sort(children, head, body);
                         if !ignore { head.add_child(html_node); }
                     }
                     else{
                         if !ignore {
-                            Self::recursive_sort(children, head, &mut html_node);
-                            body.add_child(html_node);
+                            {Self::recursive_sort(children, head, &mut html_node);}
+                            {body.add_child(html_node);}
                         }
                         else{
                             Self::recursive_sort(children, head, body);
@@ -88,8 +91,10 @@ impl<'a> HTMLDocument<'_>{
             body
         }
     }
+    */
 
 }
+
 
 impl Display for HTMLDocument<'_>{
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

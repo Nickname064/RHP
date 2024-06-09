@@ -1,5 +1,8 @@
 use std::fs;
+use std::io::stdout;
+use std::io::Write;
 use crate::rtml::document::HTMLDocument;
+use crate::rtml::parse::parse;
 
 mod rtml;
 mod rhp;
@@ -13,9 +16,11 @@ fn main() {
                 .replace("\n", "")
                 .replace("\t", "");
 
-            let doc = HTMLDocument::from_rhp(&filtered).unwrap();
+            let tokens = parse(&filtered).expect("uh oh");
 
-            println!("{}", doc);
+            for token in tokens{
+                println!("{:#?}", token);
+            }
         }
         Err(_) => {
             panic!("Umm, what the sigma")

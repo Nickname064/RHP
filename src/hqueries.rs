@@ -1,9 +1,7 @@
-use std::collections::{HashMap, HashSet};
 use crate::rtml::html_elements::HTMLElement;
 
-/*
 ///A representation of standard dom queries
-struct HQuery<'a>{
+pub struct HQuery<'a>{
 
     ///Tag name of the object
     name : Option<&'a str>,
@@ -20,19 +18,30 @@ struct HQuery<'a>{
 
 enum HCombinedQuery<'a>{
     Simple(HQuery<'a>),
-    Or(HCombinedQuery<'a>, HCombinedQuery<'a>),
-    DirectChild(HCombinedQuery<'a>, HCombinedQuery<'a>),
-    IndirectChild(HCombinedQuery<'a>, HCombinedQuery<'a>)
+    Or(Box<(HCombinedQuery<'a>, HCombinedQuery<'a>)>),
+    DirectChild(Box<(HCombinedQuery<'a>, HCombinedQuery<'a>)>),
+    IndirectChild(Box<(HCombinedQuery<'a>, HCombinedQuery<'a>)>)
 }
 
 impl<'a> HQuery<'_>{
 
     pub fn from_str(source : &'a str) -> HQuery{
-        panic!("Implement Query parsing !");
 
         // NAME#ID.CLASS[attr=value]
 
+        //Special chars : #, ., [
+        let special_chars = &['#', '.', '['];
+        let bytes = source.as_bytes();
 
+        let mut result = HQuery{
+            name: None,
+            class: vec![],
+            id: None,
+            attributes: vec![],
+        };
+
+
+        panic!("Implement Query parsing !");
     }
 
     pub fn matches(&self, html_node : &HTMLElement<'a>) -> bool{
@@ -42,13 +51,14 @@ impl<'a> HQuery<'_>{
             _ => {}
         }
 
-        let split_class = html_node
+        let split_class  : Vec<&str> = html_node
             .get_attribute("class")
             .unwrap_or("")
-            .split(" ");
+            .split(" ")
+            .collect();
 
-        for class in self.class{
-            if !split_class.contains(class){ return false; }
+        for class in &self.class{
+            if !split_class.contains(&class){ return false; }
         }
 
         match self.id{
@@ -67,30 +77,30 @@ impl<'a> HCombinedQuery<'a>{
             let sliceA = &source[0 .. or_position].trim_end();
             let sliceB = &source[or_position + 1 ..].trim_start();
 
-            HCombinedQuery::Or(
-                HCombinedQuery::from_str(sliceA),
-                HCombinedQuery::from_str(sliceB)
-            )
+            HCombinedQuery::Or(Box::new(
+                (HCombinedQuery::from_str(sliceA),
+                HCombinedQuery::from_str(sliceB))
+            ))
 
         } else if let Some(direct_separator) = source.find(">"){
             // SELECTION > SELECTION
 
             let sliceA = &source[0 .. direct_separator].trim_end();
             let sliceB = &source[direct_separator + 1 ..].trim_start();
-            HCombinedQuery::DirectChild(
+            HCombinedQuery::DirectChild(Box::new((
                 HCombinedQuery::from_str(sliceA),
                 HCombinedQuery::from_str(sliceB)
-            )
+            )))
 
         } else if let Some(indirect_separator) = source.find(" "){
             //SELECTION SELECTION
 
             let sliceA = &source[0 .. indirect_separator].trim_end();
             let sliceB = &source[indirect_separator + 1 ..].trim_start();
-            HCombinedQuery::IndirectChild(
+            HCombinedQuery::IndirectChild( Box::new((
                 HCombinedQuery::from_str(sliceA),
                 HCombinedQuery::from_str(sliceB)
-            )
+            )))
 
         } else {
             HCombinedQuery::Simple(
@@ -99,13 +109,23 @@ impl<'a> HCombinedQuery<'a>{
         }
     }
 
+    pub fn get_matches(&self, html_node : &HTMLElement<'a>) -> Vec<HTMLElement<'a>>{
+
+        todo!("Implement this once html nodes have parents");
+
+        vec![]
+    }
+
     pub fn matches(&self, html_node : &HTMLElement<'a>) -> bool{
         match self{
             HCombinedQuery::Simple(Query) => { Query.matches(html_node) }
-            HCombinedQuery::Or(A, B) => { A.matches(html_node) || B.matches(html_node) }
-            HCombinedQuery::DirectChild(_, _) => { panic!("TODO : Implement Direct children in combined queries !") }
-            HCombinedQuery::IndirectChild(_, _) => { panic!("TODO : Implement Indirect children in combined queries")}
+            HCombinedQuery::Or(tuple) => {
+                let (ref a, ref b) = **tuple;
+                a.matches(html_node) || b.matches(html_node)
+            }
+            HCombinedQuery::DirectChild(tuple) => { panic!("TODO : Implement Direct children in combined queries !") }
+            HCombinedQuery::IndirectChild(_) => { panic!("TODO : Implement Indirect children in combined queries")}
         }
     }
 }
-*/
+

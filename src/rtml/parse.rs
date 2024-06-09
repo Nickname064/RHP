@@ -1,4 +1,4 @@
-use crate::rtml::html_elements::{HTMLElement, HTMLEnum};
+use crate::rtml::html_elements::{HTMLElement, HTMLElementReference, HTMLEnum};
 
 /// Some html tags are self-closing and do not absolutely need an ending Slash
 /// This is the case with `<br>`, for example (which can also be writted `<br/>`)
@@ -188,7 +188,7 @@ pub fn parse<'a>(mut document: &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserError
 }
 
 ///Returns (rest of document, parsed element)
-fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTMLElement<'a>), ParserError>{
+fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTMLElementReference<'a>), ParserError>{
 
     enum Mode{
         None,
@@ -197,7 +197,9 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
         Closed
     }
 
-    let mut res = HTMLElement::new(name);
+    let res_reference = HTMLElement::new();
+    let mut res = res_reference.borrow_mut();
+    res.name = name;
 
     let mut stored_attr : Option<&str> = None; //Stored attribute name
     let mut mode : Mode = Mode::None;
@@ -237,7 +239,8 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                         document = &document[index + 1 ..];
 
                         if self_closed{
-                            return Ok((document, res));
+                            drop(res);
+                            return Ok((document, res_reference));
                         }
                         else{
 
@@ -256,7 +259,8 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
 
                                     //Because the rest of the document has been parsed,
                                     //the return document is always empty
-                                    return Ok(("", res));
+                                    drop(res);
+                                    return Ok(("", res_reference));
                                 }
                                 Some(index) => {
                                     //We can only parse what's between here and the tag closure
@@ -271,7 +275,8 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                                         res.add_children(parse(recdoc)?);
                                     }
 
-                                    return Ok((&document[index + end_tag.len() ..], res));
+                                    drop(res);
+                                    return Ok((&document[index + end_tag.len() ..], res_reference));
                                 }
                             }
                         }
@@ -354,7 +359,8 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                         document = &document[index + 1..];
 
                         if self_closed {
-                            return Ok((document, res));
+                            drop(res);
+                            return Ok((document, res_reference));
                         } else {
                             let end_tag = format!("</{}>", name);
                             match document.find(&end_tag){
@@ -371,7 +377,8 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
 
                                     //Because the rest of the document has been parsed,
                                     //the return document is always empty
-                                    return Ok(("", res));
+                                    drop(res);
+                                    return Ok(("", res_reference));
                                 }
                                 Some(index) => {
                                     //We can only parse what's between here and the tag closure
@@ -386,7 +393,8 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                                         res.add_children(parse(recdoc)?);
                                     }
 
-                                    return Ok((&document[index + end_tag.len() ..], res));
+                                    drop(res);
+                                    return Ok((&document[index + end_tag.len() ..], res_reference));
                                 }
                             }
                         }

@@ -1,15 +1,24 @@
-use std::array::IntoIter;
+use std::cell::RefCell;
 use std::fmt::{Display, Formatter};
-use std::io::Chain;
+use std::rc::{Rc, Weak};
+
 use crate::rtml::parse::SELF_CLOSABLE_TAGS;
 
 #[derive(Debug, Clone)]
 /// Either Text Contents or a [`HTMLElement`](HTMLElement)
 pub enum HTMLEnum<'a>{
     Text(&'a str),
-    Element(HTMLElement<'a>),
+    Element(HTMLElementReference<'a>),
     Comment(&'a str)
 }
+
+/// A Weak reference to a HTMLElement.
+/// Used by children to reference their parents, without actually owning them
+pub type HTMLElementWeakReference<'a> = Weak<RefCell<HTMLElement<'a>>>;
+
+/// A Strong reference to a HTMLElement.
+/// Used by parents to reference their children.
+pub type HTMLElementReference<'a> = Rc<RefCell<HTMLElement<'a>>>;
 
 #[derive(Debug, Clone)]
 /// A HTML tag.
@@ -30,17 +39,41 @@ pub struct HTMLElement<'a>{
 
     ///This tag's contents, whether they be tags or text.
     pub(crate) children : Vec<HTMLEnum<'a>>,
+
+    ///This tag's parent (as a weak reference)
+    pub(crate) parent : Option<HTMLElementWeakReference<'a>>,
+
+    //A weak reference to the self, to pass around
+    weak_self: HTMLElementWeakReference<'a>
 }
 
+
 impl<'a> HTMLElement<'a>{
-    pub fn new(name : &'a str) -> HTMLElement<'a> {
-        HTMLElement{
-            name,
+
+    //Handle allocations and references
+    pub fn new() -> HTMLElementReference<'a> {
+
+        let elem = Rc::new(RefCell::new(HTMLElement{
+            name : "",
             args : vec![],
             attributes : vec![],
             children : vec![],
-        }
+            parent : None,
+            weak_self: Default::default(),
+        }));
+
+        elem.borrow_mut().weak_self = Rc::downgrade(&elem);
+        elem
     }
+    pub fn reference(&self) -> Option<HTMLElementReference<'a>>{
+        self.weak_self.upgrade()
+    }
+    pub fn weak_reference(&self) -> HTMLElementWeakReference<'a>{
+        self.weak_self.clone()
+    }
+
+
+    //Edit the thing
     pub fn attribute(&mut self, attribute : &'a str, value : &'a str) -> &HTMLElement<'a>{
         //Attributes are only meant to be added / modified, not removed
 
@@ -53,7 +86,7 @@ impl<'a> HTMLElement<'a>{
         }
         self
     }
-    pub fn argument(&mut self, arg_name : &'a str, value : &'a str) -> &HTMLElement<'a>{
+    pub fn argument(&'a mut self, arg_name : &'a str, value : &'a str) -> &HTMLElement<'a>{
 
         //Attributes are only meant to be added, not removed
 
@@ -66,57 +99,58 @@ impl<'a> HTMLElement<'a>{
         }
         self
     }
-    pub fn add_child(&mut self, mut child: HTMLElement<'a>) -> &HTMLElement<'a>{
+    pub fn add_child(&mut self, mut child: HTMLElementReference<'a>) -> &mut Self {
+        child.borrow_mut().parent = Some(self.weak_self.clone());
         self.children.push(HTMLEnum::Element(child));
         self
     }
-    pub fn add_children(&mut self, children : Vec<HTMLEnum<'a>>) -> &HTMLElement<'a>{
+    pub fn add_children(&mut self, children : Vec<HTMLEnum<'a>>) -> &mut Self{
         for child in children {
             self.children.push(child);
         }
         self
     }
-    pub fn add_text(&mut self, text : &'a str) -> &HTMLElement<'a>{
+    pub fn add_text<'x>(&'x mut self, text : &'a str) -> &'x Self{
         self.children.push(HTMLEnum::Text(text));
         self
+    }
+
+    ///Disconnect this node from its parent, returns the ownership
+    pub fn orphanize(&self) -> &Self {
+        todo!("Here");
     }
 
     //Getter methods
     pub fn name(&self) -> &str { &self.name }
     pub fn get_attribute(&self, name : &str) -> Option<&str>{
-        match self.attributes.iter().find(|(key, attribute)| key.to_string() == name.to_string()){
-            Some((key, val)) => {return Some(val)}
+        match self.attributes.iter().find(|(key, _attribute)| key.to_string() == name.to_string()){
+            Some((_key, val)) => {return Some(val)}
             None => {return None; }
         }
     }
-    pub fn children(&self) -> &Vec<HTMLEnum> {
+    pub fn children(&self) -> &Vec<HTMLEnum<'a>> {
         &self.children
     }
     pub fn self_closing(&self) -> bool {
         SELF_CLOSABLE_TAGS.iter().find(|&&x| x == self.name).is_some()
     }
-    pub fn rec_html_children(&self) -> Vec<&HTMLElement<'a>> {
+    pub fn rec_html_children(&self) -> Vec<HTMLElementReference<'a>> {
 
-        let mut res = vec![self];
+        let mut res = vec![];
 
-        for child in &self.children{
-            match child{
-                HTMLEnum::Element(html) => {
-                    res.append(&mut html.rec_html_children());
-                }
-                _ => {}
-            }
-        }
 
         return res;
     }
 }
 
+
 impl Display for HTMLEnum<'_>{
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self{
             HTMLEnum::Text(str) => { write!(f, "{}", str) }
-            HTMLEnum::Element(elem) => { write!(f, "{}", elem)}
+            HTMLEnum::Element(elem) => {
+                write!(f, "{}", elem.borrow())
+            }
             HTMLEnum::Comment(str) => { write!(f, "<!--{}-->", str) }
         }
     }

@@ -1,14 +1,21 @@
 # RHP TODO List
 
+## [ ] Custom elements
 - [X] Implement basic Custom Elements
 - [X] Implement Recursive Custom Elements
   - [X] Avoid infinite recursive algorithm
 - [ ] Implement child selectors
-
+  
+## Language
+- [ ] Add import statement (only import custom selectors)
+- [ ] Add include statement (import selectors and text contents)
+  
+## Dev QOL
 - [ ] Improve parser to add error handling
 - [ ] Write Linter and Language Server
-
-- [ ] Add cpmpatibility with other HTML-like formats (HAML)
+  
+## Versatility
+- [ ] Add compatibility with other HTML-like formats (HAML)
 
 - [ ] Implement class/attribute propagation
 - [ ] Who knows ???

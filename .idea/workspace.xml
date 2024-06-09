@@ -7,11 +7,15 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="30cbb849-498c-4ce7-89ce-b1286e2864dd" name="Changes" comment="Implemented recursive custom elements">
+    <list default="true" id="30cbb849-498c-4ce7-89ce-b1286e2864dd" name="Changes" comment="Fixed custom self-closed elements capturing children">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DEBUG.rhp" beforeDir="false" afterPath="$PROJECT_DIR$/DEBUG.rhp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hqueries.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/hqueries.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rhp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rhp.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rtml/document.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/document.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rtml/html_elements.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/html_elements.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rtml/parse.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/parse.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -53,25 +57,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Cargo.Run rhp.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/wanth/Documents/GitHub/RHP/rhp/src/rtml&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
-    &quot;org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon&quot;: &quot;&quot;,
-    &quot;org.rust.disableDetachedFileInspectionC:/Users/wanth/Documents/GitHub/RHP/rhp/src/rtml/document.rs&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Cargo.Run rhp.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.rust.reset.selective.auto.import": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/wanth/Documents/GitHub/RHP/rhp/src/rtml",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
+    "org.rust.disableDetachedFileInspectionC:/Users/wanth/Documents/GitHub/RHP/rhp/src/rtml/document.rs": "true",
+    "settings.editor.selected.configurable": "language.rust.cargo.check",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\wanth\Documents\GitHub\RHP\rhp\src\rtml" />
@@ -123,7 +127,8 @@
       <workItem from="1717827273975" duration="24330000" />
       <workItem from="1717871763991" duration="2856000" />
       <workItem from="1717874831631" duration="97000" />
-      <workItem from="1717915245378" duration="1337000" />
+      <workItem from="1717915245378" duration="5541000" />
+      <workItem from="1717928925918" duration="12526000" />
     </task>
     <task id="LOCAL-00001" summary="First working version, simply define custom tags and replace them, while passing the children">
       <option name="closed" value="true" />
@@ -149,32 +154,36 @@
       <option name="project" value="LOCAL" />
       <updated>1717873812777</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Fixed custom self-closed elements capturing children">
+      <option name="closed" value="true" />
+      <created>1717917047549</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1717917047549</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="First working version, simply define custom tags and replace them, while passing the children" />
     <MESSAGE value="Code refactor mostly in rhp.rs and document.rs" />
     <MESSAGE value="Implemented recursive custom elements" />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented recursive custom elements" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/rhp.rs</url>
-          <line>229</line>
-          <option name="timeStamp" value="18" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/rhp.rs</url>
-          <line>58</line>
-          <option name="timeStamp" value="21" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="Fixed custom self-closed elements capturing children" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed custom self-closed elements capturing children" />
   </component>
 </project>

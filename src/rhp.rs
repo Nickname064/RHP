@@ -1,8 +1,9 @@
 use HTMLEnum::Element;
 use crate::rtml::document::HTMLDocument;
-use crate::rtml::html_elements::{HTMLElement, HTMLEnum};
+use crate::rtml::html_elements::{HTMLElement, HTMLElementReference, HTMLEnum};
 use crate::rtml::parse::{parse, ParserError};
 
+/*
 const directive_names : &[&str] = &[
     "define", //Define a custom element
     //"import", //Import another page's custom elements
@@ -36,7 +37,9 @@ fn filter_out_directives<'a>(stream : Vec<HTMLEnum<'a>>) -> (Vec<Directives<'a>>
         match element{
             Element(html_element) => {
 
-                if directive_names.contains(&html_element.name().to_lowercase().as_str()){
+                let borrow = html_element.borrow();
+
+                if directive_names.contains(&borrow.name().to_lowercase().as_str()){
                     directives.push(parse_directives(html_element));
                     continue;
                 } else {
@@ -53,7 +56,7 @@ fn filter_out_directives<'a>(stream : Vec<HTMLEnum<'a>>) -> (Vec<Directives<'a>>
 }
 
 ///Parses a HTMLElement representing a directive
-fn parse_directives(directive : HTMLElement) -> Directives {
+fn parse_directives(directive : HTMLElementReference) -> Directives {
 
     match directive.name().to_lowercase().as_str(){
         "define" => {
@@ -86,25 +89,31 @@ impl<'a> DEFINE<'_>{
 
     /// Filters all the elements of list(containing the custom tag contents)
     /// to apply modifiers corresponding to the tag invocation.
-    fn apply_to(&self, list : Vec<HTMLEnum<'a>>, tag_invocation : HTMLElement<'a>) -> Vec<HTMLEnum<'a>>{
+    fn apply_to(&self, list : Vec<HTMLEnum<'a>>, tag_invocation : HTMLElementReference<'a>) -> Vec<HTMLEnum<'a>>{
 
         let mut parsed = vec![];
 
         for elem in list{
             match elem{
                 Element(html) => {
-                    if html.name == "children"{
-                        parsed.append(&mut tag_invocation.children.clone());
+
+                    let html_borrow = html.borrow();
+
+                    if html_borrow.name == "children"{
+                        parsed.append(&mut tag_invocation.borrow().children.clone());
                     }
                     else{
-                        parsed.push(
-                            Element(HTMLElement {
-                                name: html.name,
-                                args: html.args,
-                                attributes: html.attributes,
-                                children : self.apply_to(html.children, tag_invocation.clone())
-                            })
-                        );
+
+                        let transformed_element = HTMLElement::new();
+                        let mut element_borrow = transformed_element.borrow_mut();
+
+                        element_borrow.name = html_borrow.name();
+                        element_borrow.args = html_borrow.args();
+                        element_borrow.attributes = html_borrow.attributes();
+                        element_borrow.children = self.apply_to(html_borrow.children.clone(), tag_invocation.clone());
+                        element_borrow.parent = html_borrow.parent;
+
+                        parsed.push(transformed_element);
                     }
                 }
                 any => { parsed.push(any); }
@@ -155,7 +164,7 @@ impl<'a> DEFINE<'_>{
                         }
                     }
                 }
-                any => {}
+                _any => {}
             }
         }
 
@@ -215,24 +224,22 @@ impl<'a> DEFINE<'_>{
     }
 }
 
-impl<'a> HTMLDocument<'_>{
-    pub fn from_rhp(document : &'a str) -> Result<(HTMLDocument<'a>), ParserError>{
+pub fn process_document(tokens : Vec<HTMLEnum>) -> Vec<HTMLEnum>{
 
-        let (directives, document_tokens) = filter_out_directives(parse(document)?);
+    let (directives, document_tokens) = filter_out_directives(tokens);
 
-        let mut custom_tags = vec![];
+    let mut custom_tags = vec![];
 
-        for dir in directives{
-            let Directives::DEFINE(d) = dir;
-            custom_tags.push(d);
-        }
-
-        custom_tags = DEFINE::compile(custom_tags);
-
-        //APPLY CUSTOM ELEMENTS
-        let processed = DEFINE::process_stream(document_tokens, &custom_tags);
-
-        let document = HTMLDocument::from_tokens(processed);
-        return Ok(document);
+    for dir in directives{
+        let Directives::DEFINE(d) = dir;
+        custom_tags.push(d);
     }
+
+    custom_tags = DEFINE::compile(custom_tags);
+
+    //APPLY CUSTOM ELEMENTS
+    let processed = DEFINE::process_stream(document_tokens, &custom_tags);
+    processed
 }
+
+*/

@@ -1,9 +1,5 @@
-<define tagname="c3">
-    <p><c1><children/></c1></p>
-</define>
-
 <define tagname="c1">
-    <h1>I ALONE AM THE HONORED ONE</h1>
+    <c1>I ALONE AM THE HONORED ONE</c1>
     <div><children/></div>
 </define>
 
@@ -12,5 +8,5 @@
 </define>
 
 <div>
-    <c3>Hello World !</c3>
+    <c1>Hello World !</c1>
 </div>
