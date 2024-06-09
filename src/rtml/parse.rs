@@ -3,34 +3,16 @@ use crate::rtml::html_elements::{HTMLElement, HTMLElementReference, HTMLEnum};
 /// Some html tags are self-closing and do not absolutely need an ending Slash
 /// This is the case with `<br>`, for example (which can also be writted `<br/>`)
 pub(crate) static SELF_CLOSABLE_TAGS: &[&str] = &[
-    "are",
-    "base",
-    "br",
-    "col",
-    "embed",
-    "hr",
-    "img",
-    "input",
-    "link",
-    "meta",
-    "param",
-    "source",
-    "track",
-    "wbr",
-
-    "command",
-    "keygen",
-    "menuitem",
-    "frame",
-
-    "!doctype",
+    "are", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source",
+    "track", "wbr", "command", "keygen", "menuitem", "frame", "!doctype",
 ];
 
 /// Every non-self-closing element that CANNOT have children
-/// and does not need parsing beyond looking for a tag end
-static STERILE_TAGS : &[&str] = &[
-    "script"
-];
+/// and does not need parsing beyond looking for a tag end.
+///
+/// Not mandatory for a non-self closing tag that cannot have children,
+/// but more optimized
+static STERILE_TAGS: &[&str] = &["script"];
 
 #[derive(Debug)]
 pub enum ParserError {
@@ -39,9 +21,9 @@ pub enum ParserError {
 
 macro_rules! find_from {
     ($document:expr, $offset:expr, $pattern:expr) => {
-            match &$document[$offset ..].find($pattern){
-                None => None,
-                Some(index) => Some(index + $offset)
+        match &$document[$offset..].find($pattern) {
+            None => None,
+            Some(index) => Some(index + $offset),
         }
     };
 }
@@ -55,46 +37,45 @@ macro_rules! find_from {
 ///
 /// # Returns
 /// A Vector of HTMLEnums, representing the contents of the HTML page.
-pub fn parse<'a>(mut document: &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserError>{
-
+pub fn parse<'a>(mut document: &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserError> {
     //We start in regular data mode.
     //For now, what we see is text.
     //Let's try to find a tag
 
-    let mut result : Vec<HTMLEnum<'a>> = vec![];
-    let mut offset : usize = 0;
+    let mut result: Vec<HTMLEnum<'a>> = vec![];
+    let mut offset: usize = 0;
     // We search in the string from a certain position. That position is 'offset'
 
     //As long as there is text to read
     while offset < document.len() {
-
         //We found what might be a tag starter
-        if let Some(index) = find_from!(document, offset, '<'){
-
+        if let Some(index) = find_from!(document, offset, '<') {
             //Check if its a comment
-            if matches!(document.get(index + 1 .. index + 4), Some("!--")){ //Comment tag
+            if matches!(document.get(index + 1..index + 4), Some("!--")) {
+                //Comment tag
 
-                if let Some(end) = find_from!(document, index + 4, "-->"){
-
-                    result.push( //Push the text before the comment
-                        HTMLEnum::Text(&document[..index])
+                if let Some(end) = find_from!(document, index + 4, "-->") {
+                    result.push(
+                        //Push the text before the comment
+                        HTMLEnum::Text(&document[..index]),
                     );
 
-                    result.push( //Push the comments contents into the result
-                        HTMLEnum::Comment(&document[index + 4 .. end])
+                    result.push(
+                        //Push the comments contents into the result
+                        HTMLEnum::Comment(&document[index + 4..end]),
                     );
 
-                    document = &document[end + 3 ..]; //Crop the comment end
+                    document = &document[end + 3..]; //Crop the comment end
                     continue; //Restart the process
-                }
-                else{
-
-                    result.push( //Push the text before the comment
-                                 HTMLEnum::Text(&document[..index])
+                } else {
+                    result.push(
+                        //Push the text before the comment
+                        HTMLEnum::Text(&document[..index]),
                     );
 
-                    result.push( //Push the rest of the document as a comment
-                        HTMLEnum::Comment(&document[index + 3 ..])
+                    result.push(
+                        //Push the rest of the document as a comment
+                        HTMLEnum::Comment(&document[index + 3..]),
                     );
 
                     document = ""; //Flush the entire document into the returned comment
@@ -103,19 +84,17 @@ pub fn parse<'a>(mut document: &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserError
                     continue; //Restart the process
                 }
             }
-
             //Check if it's a DOCTYPE
             else {
+                let mut name: Option<&str> = None;
 
-                let mut name : Option<&str> = None;
-
-                match document.get(index + 1 .. index + 9){
-                    Some(x) if x.to_lowercase() == "!doctype" => { //Names are case-insensitive
+                match document.get(index + 1..index + 9) {
+                    Some(x) if x.to_lowercase() == "!doctype" => {
+                        //Names are case-insensitive
                         name = Some("!doctype");
 
                         document = &document[index + 9..]; //Cut off the title
                         offset = 0; //Reset the reading offset
-
                     }
                     _ => {
                         //Try to parse the name
@@ -123,22 +102,30 @@ pub fn parse<'a>(mut document: &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserError
                         //1.Test if the 1st char matches the conditions for the name
                         //document[index] = '<'
 
-                        if find_from!(document, index + 1, |x| matches!(x, 'A'..='Z' | 'a'..='z' | '_')) == Some(index + 1) {
+                        if find_from!(
+                            document,
+                            index + 1,
+                            |x| matches!(x, 'A'..='Z' | 'a'..='z' | '_')
+                        ) == Some(index + 1)
+                        {
                             //First character matches
 
                             //Lets see up until where the string matches
-                            match find_from!(document, index + 2, |x| !matches!(x, 'A'..='Z' | 'a'..='z' | '_' | '-' | '0' ..= '9')){
+                            match find_from!(
+                                document,
+                                index + 2,
+                                |x| !matches!(x, 'A'..='Z' | 'a'..='z' | '_' | '-' | '0' ..= '9')
+                            ) {
                                 Some(i) => {
                                     //Found a name end
-                                    name = Some(&document[index + 1 .. i]); //Transfer the name
-                                    document = &document[i .. ]; //Crop the tag start from the document
+                                    name = Some(&document[index + 1..i]); //Transfer the name
+                                    document = &document[i..]; //Crop the tag start from the document
                                     offset = 0; //Reset the reading offset
                                 }
                                 None => {
                                     todo!("UnterminatedTagName");
                                 }
                             }
-
                         }
                     }
                 }
@@ -148,24 +135,15 @@ pub fn parse<'a>(mut document: &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserError
                     document = doc;
                     offset = 0;
                     result.push(HTMLEnum::Element(tag_info)); //Add the tag to the result
-                }
-                else{
-
+                } else {
                     //It's not a tag, remember to start reading after that element next time
                     offset += 1;
-
                 }
-
             }
+        } else {
+            //No tag starter, this is only text
 
-
-
-        }
-        else{ //No tag starter, this is only text
-
-            result.push(
-                HTMLEnum::Text(document)
-            );
+            result.push(HTMLEnum::Text(document));
 
             document = ""; //Flush document
 
@@ -173,52 +151,51 @@ pub fn parse<'a>(mut document: &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserError
         }
     }
 
-    if offset != 0{
-
+    if offset != 0 {
         //No tag starter, this document is only text
-        result.push(
-            HTMLEnum::Text(document)
-        );
+        result.push(HTMLEnum::Text(document));
 
         document = ""; //Flush document
-
     }
 
     return Ok(result);
 }
 
 ///Returns (rest of document, parsed element)
-fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTMLElementReference<'a>), ParserError>{
-
-    enum Mode{
+fn parse_tag<'a>(
+    mut document: &'a str,
+    name: &'a str,
+) -> Result<(&'a str, HTMLElementReference<'a>), ParserError> {
+    enum Mode {
         None,
         Alpha(usize),
         String(usize),
-        Closed
+        Closed,
     }
 
     let res_reference = HTMLElement::new();
     let mut res = res_reference.borrow_mut();
     res.name = name;
 
-    let mut stored_attr : Option<&str> = None; //Stored attribute name
-    let mut mode : Mode = Mode::None;
+    let mut stored_attr: Option<&str> = None; //Stored attribute name
+    let mut mode: Mode = Mode::None;
 
-    let mut html_encoding_from : Option<usize> = None;
+    let mut html_encoding_from: Option<usize> = None;
 
-    let mut equaled : bool = false; //An equal sign was parsed, but an attribute value has not been parsed yes
+    let mut equaled: bool = false; //An equal sign was parsed, but an attribute value has not been parsed yes
     let mut quote_symbol = '"'; //The last symbol used to start a string
 
-    let mut self_closed : bool = SELF_CLOSABLE_TAGS.contains(&&*name.to_lowercase()); //Is the tag self-closed ? (like <br>)
-    let sterile : bool = STERILE_TAGS.contains(&&*name.to_lowercase()); //Is the tag unable to have children (like script) ? (here for optimization)
+    let mut self_closed: bool = SELF_CLOSABLE_TAGS.contains(&&*name.to_lowercase()); //Is the tag self-closed ? (like <br>)
+    let sterile: bool = STERILE_TAGS.contains(&&*name.to_lowercase()); //Is the tag unable to have children (like script) ? (here for optimization)
 
-    for (index, char) in document.char_indices(){
-
-        if html_encoding_from.is_some(){
+    for (index, char) in document.char_indices() {
+        if html_encoding_from.is_some() {
             //This goes above the regular checking loop.
 
             //Skip to the end of the HTML_encoding character
-            if char != ';'{ continue; }
+            if char != ';' {
+                continue;
+            }
 
             //For now we discard the character
             //In later iterations we could decide to check it
@@ -226,33 +203,26 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
             continue;
         }
 
-        match mode{
-
-            Mode :: Closed => {
-
-                match char{
-
+        match mode {
+            Mode::Closed => {
+                match char {
                     '>' => {
-
                         //Only self-closed elements don't look for children.
 
-                        document = &document[index + 1 ..];
+                        document = &document[index + 1..];
 
-                        if self_closed{
+                        if self_closed {
                             drop(res);
                             return Ok((document, res_reference));
-                        }
-                        else{
-
+                        } else {
                             let end_tag = format!("</{}>", name);
-                            match document.find(&end_tag){
+                            match document.find(&end_tag) {
                                 None => {
                                     //No end found, close the tag and parse the children
 
                                     if sterile {
                                         res.add_text(document);
-                                    }
-                                    else{
+                                    } else {
                                         //Parse the children
                                         res.add_children(parse(document)?);
                                     }
@@ -265,18 +235,18 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                                 Some(index) => {
                                     //We can only parse what's between here and the tag closure
 
-                                    let recdoc = &document[.. index];
+                                    let recdoc = &document[..index];
 
-                                    if sterile { //GO faster and avoid parsing the contents of certain tags (like script)
+                                    if sterile {
+                                        //GO faster and avoid parsing the contents of certain tags (like script)
                                         res.add_text(recdoc);
-                                    }
-                                    else{
+                                    } else {
                                         //Parse the children
                                         res.add_children(parse(recdoc)?);
                                     }
 
                                     drop(res);
-                                    return Ok((&document[index + end_tag.len() ..], res_reference));
+                                    return Ok((&document[index + end_tag.len()..], res_reference));
                                 }
                             }
                         }
@@ -286,15 +256,11 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                         //After a / in an opening tag, eg : <br/
                         todo!("Incorrect character after / closure")
                     }
-
                 }
-
             }
 
-            Mode :: String(x) => {
-
+            Mode::String(x) => {
                 match char {
-
                     c if c == quote_symbol => {
                         let slice = &document[x + 1..index];
 
@@ -310,7 +276,9 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
 
                             //Flushing the stored attribute it there is one
                             match stored_attr {
-                                Some(attr) => { res.attribute(attr, ""); }
+                                Some(attr) => {
+                                    res.attribute(attr, "");
+                                }
                                 None => {}
                             };
 
@@ -318,8 +286,7 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                             stored_attr = Some(slice);
                         }
 
-                        mode = Mode :: None;
-
+                        mode = Mode::None;
                     }
 
                     _ => { /* IGNORED LOL */ }
@@ -328,7 +295,6 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
 
             _ => {
                 match char {
-
                     '>' => {
                         //Only self-closed elements don't look for children.
 
@@ -339,20 +305,20 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
 
                             match stored_attr {
                                 None => {
-                                    res.attribute(&document[x .. index], "");
+                                    res.attribute(&document[x..index], "");
                                 }
                                 Some(v) if equaled => {
-                                    res.attribute(v, &document[x .. index]);
+                                    res.attribute(v, &document[x..index]);
                                     equaled = false;
                                 }
                                 Some(v) => {
                                     res.attribute(v, "");
-                                    res.attribute(&document[x .. index], "");
+                                    res.attribute(&document[x..index], "");
                                 }
                             }
                         }
 
-                        if equaled{
+                        if equaled {
                             panic!("Unmatched = !");
                         }
 
@@ -363,14 +329,13 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                             return Ok((document, res_reference));
                         } else {
                             let end_tag = format!("</{}>", name);
-                            match document.find(&end_tag){
+                            match document.find(&end_tag) {
                                 None => {
                                     //No end found, close the tag and parse the children
 
                                     if sterile {
                                         res.add_text(document);
-                                    }
-                                    else{
+                                    } else {
                                         //Parse the children
                                         res.add_children(parse(document)?);
                                     }
@@ -383,18 +348,18 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                                 Some(index) => {
                                     //We can only parse what's between here and the tag closure
 
-                                    let recdoc = &document[.. index];
+                                    let recdoc = &document[..index];
 
-                                    if sterile { //GO faster and avoid parsing the contents of certain tags (like script)
+                                    if sterile {
+                                        //GO faster and avoid parsing the contents of certain tags (like script)
                                         res.add_text(recdoc);
-                                    }
-                                    else{
+                                    } else {
                                         //Parse the children
                                         res.add_children(parse(recdoc)?);
                                     }
 
                                     drop(res);
-                                    return Ok((&document[index + end_tag.len() ..], res_reference));
+                                    return Ok((&document[index + end_tag.len()..], res_reference));
                                 }
                             }
                         }
@@ -404,15 +369,15 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                         if let Mode::Alpha(x) = mode {
                             match stored_attr {
                                 None => {
-                                    res.attribute(&document[x .. index], "");
+                                    res.attribute(&document[x..index], "");
                                 }
                                 Some(v) if equaled => {
-                                    res.attribute(v, &document[x .. index]);
+                                    res.attribute(v, &document[x..index]);
                                     equaled = false;
                                 }
                                 Some(v) => {
                                     res.attribute(v, "");
-                                    res.attribute(&document[x .. index], "");
+                                    res.attribute(&document[x..index], "");
                                 }
                             }
                         }
@@ -427,7 +392,6 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
 
                         //Treat case WORD"STRING"
                         if let Mode::Alpha(x) = mode {
-
                             //We don't flush stored_attr, as no attribute should be stored at this point
                             //An assertion is enough
                             //Also, the = sign is supposed to end alpha words.
@@ -451,25 +415,19 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
 
                         //Transfer alpha
                         if let Mode::Alpha(x) = mode {
-
                             if let Some(word) = stored_attr {
-
-                                if equaled{
-                                    res.attribute(word, &document[x .. index]);
+                                if equaled {
+                                    res.attribute(word, &document[x..index]);
                                     equaled = false;
-                                }
-                                else{
+                                } else {
                                     res.attribute(word, "");
-                                    stored_attr = Some(&document[x .. index])
+                                    stored_attr = Some(&document[x..index])
                                 }
-
-                            }
-                            else{
+                            } else {
                                 stored_attr = Some(&document[x..index]);
                             }
 
-                            mode = Mode :: None;
-
+                            mode = Mode::None;
                         }
 
                         equaled = true;
@@ -480,7 +438,6 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                         //They dont yet push it as a attr
 
                         if let Mode::Alpha(x) = mode {
-
                             let slice = &document[x..index];
 
                             match stored_attr {
@@ -489,28 +446,24 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                                     stored_attr = Some(slice)
                                 }
                                 Some(word) => {
-
                                     if equaled {
                                         res.attribute(word, slice);
                                         equaled = false;
-                                    }
-                                    else{
+                                    } else {
                                         res.attribute(word, "");
                                         stored_attr = Some(slice)
                                     }
-
                                 } //Flush the stored word as a boolean attr
                             }
 
                             //Store the new attribute
-
                         }
                     }
 
                     'A'..='Z' | 'a'..='z' => {
-
                         //Alphabetic
-                        if let Mode::Alpha(_) = mode {/* NO OPERATION */} else {
+                        if let Mode::Alpha(_) = mode { /* NO OPERATION */
+                        } else {
                             mode = Mode::Alpha(index);
                         }
 
@@ -519,14 +472,18 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                         //AS SUCH, WE CAN GAMBLE, AND IF IT TURNS OUT THAT THE CHARACTER IS INVALID,
                         //RETURN AN ERROR
 
-                        if char == '&'{
+                        if char == '&' {
                             html_encoding_from = Some(index);
                         }
                     }
 
-                    '0' ..= '9'| '_' | '-' | '&' if matches!(mode, Mode::Alpha(_)) => { continue; }
+                    '0'..='9' | '_' | '-' | '&' if matches!(mode, Mode::Alpha(_)) => {
+                        continue;
+                    }
 
-                    other_char => { panic!("Unexpected char : {}", other_char) }
+                    other_char => {
+                        panic!("Unexpected char : {}", other_char)
+                    }
                 }
             }
         }

@@ -6,6 +6,9 @@
   - [X] Avoid infinite recursive algorithm
 - [X] Give elements easy access to their parents
 - [ ] Implement child selectors
+  - [ ] Implement basic queries
+    - [ ] Implement attr-value queries
+  - [X] Implement env queries (check parent)
 
 ## Language
 - [ ] Add import statement (only import custom selectors)
@@ -17,9 +20,6 @@
   
 ## Versatility
 - [ ] Add compatibility with other HTML-like formats (HAML)
-
-- [ ] Implement class/attribute propagation
-- [ ] Who knows ???
 
 
 ## Bug fixes

@@ -7,15 +7,15 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="30cbb849-498c-4ce7-89ce-b1286e2864dd" name="Changes" comment="Fixed custom self-closed elements capturing children">
+    <list default="true" id="30cbb849-498c-4ce7-89ce-b1286e2864dd" name="Changes" comment="Refactoring : Everything is now adapted to work with the reference model">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DEBUG.rhp" beforeDir="false" afterPath="$PROJECT_DIR$/DEBUG.rhp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/hqueries.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/hqueries.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rhp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rhp.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rtml/document.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/document.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rtml/html_elements.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/html_elements.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rtml/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rtml/parse.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/parse.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -60,6 +60,8 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Cargo.Run rhp.executor": "Run",
+    "Cargo.Test test_parse_nb.executor": "Run",
+    "Cargo.test.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "git-widget-placeholder": "main",
@@ -84,9 +86,55 @@
       <recent name="C:\Users\wanth\Documents\GitHub\RHP" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunAnythingCache">
+    <option name="myCommands">
+      <command value="cargo test" />
+    </option>
+  </component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="CargoCommandRunConfiguration" />
+      </set>
+    </option>
+  </component>
+  <component name="RunManager" selected="Cargo.Run rhp">
     <configuration name="Run rhp" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="run --package rhp --bin rhp" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test test_parse_nb" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package rhp --bin rhp test_parse_nb -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="test" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -105,6 +153,8 @@
     <recent_temporary>
       <list>
         <item itemvalue="Cargo.Run rhp" />
+        <item itemvalue="Cargo.Test test_parse_nb" />
+        <item itemvalue="Cargo.test" />
       </list>
     </recent_temporary>
   </component>
@@ -128,7 +178,7 @@
       <workItem from="1717871763991" duration="2856000" />
       <workItem from="1717874831631" duration="97000" />
       <workItem from="1717915245378" duration="5541000" />
-      <workItem from="1717928925918" duration="12526000" />
+      <workItem from="1717928925918" duration="24757000" />
     </task>
     <task id="LOCAL-00001" summary="First working version, simply define custom tags and replace them, while passing the children">
       <option name="closed" value="true" />
@@ -162,7 +212,31 @@
       <option name="project" value="LOCAL" />
       <updated>1717917047549</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Refactoring : Use shared references for nodes, to more easily allow parents to have only references to their children and vice-versa">
+      <option name="closed" value="true" />
+      <created>1717945553105</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1717945553105</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Refactoring : Changed HTMLDocument to make it work with the new reference model">
+      <option name="closed" value="true" />
+      <created>1717946242109</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1717946242109</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Refactoring : Everything is now adapted to work with the reference model">
+      <option name="closed" value="true" />
+      <created>1717949909957</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1717949909957</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -184,6 +258,9 @@
     <MESSAGE value="Code refactor mostly in rhp.rs and document.rs" />
     <MESSAGE value="Implemented recursive custom elements" />
     <MESSAGE value="Fixed custom self-closed elements capturing children" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed custom self-closed elements capturing children" />
+    <MESSAGE value="Refactoring : Use shared references for nodes, to more easily allow parents to have only references to their children and vice-versa" />
+    <MESSAGE value="Refactoring : Changed HTMLDocument to make it work with the new reference model" />
+    <MESSAGE value="Refactoring : Everything is now adapted to work with the reference model" />
+    <option name="LAST_COMMIT_MESSAGE" value="Refactoring : Everything is now adapted to work with the reference model" />
   </component>
 </project>
