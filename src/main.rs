@@ -1,7 +1,7 @@
 use std::fs;
-use std::io::stdout;
-use std::io::Write;
 use crate::rtml::document::HTMLDocument;
+
+
 use crate::rtml::parse::parse;
 
 mod rtml;
@@ -17,10 +17,10 @@ fn main() {
                 .replace("\t", "");
 
             let tokens = parse(&filtered).expect("uh oh");
+            let document = HTMLDocument::from_tokens(tokens);
 
-            for token in tokens{
-                println!("{:#?}", token);
-            }
+            println!("{}", document);
+
         }
         Err(_) => {
             panic!("Umm, what the sigma")

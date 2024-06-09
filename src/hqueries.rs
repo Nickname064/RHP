@@ -30,10 +30,10 @@ impl<'a> HQuery<'_>{
         // NAME#ID.CLASS[attr=value]
 
         //Special chars : #, ., [
-        let special_chars = &['#', '.', '['];
-        let bytes = source.as_bytes();
+        let _special_chars = &['#', '.', '['];
+        let _bytes = source.as_bytes();
 
-        let mut result = HQuery{
+        let _result = HQuery{
             name: None,
             class: vec![],
             id: None,
@@ -69,7 +69,7 @@ impl<'a> HQuery<'_>{
 }
 impl<'a> HCombinedQuery<'a>{
 
-    pub fn from_str(mut source : &'a str) -> HCombinedQuery<'a>{
+    pub fn from_str(source : &'a str) -> HCombinedQuery<'a>{
 
         if let Some(or_position) = source.find(","){
             //SELECTION, SELECTION
@@ -109,7 +109,7 @@ impl<'a> HCombinedQuery<'a>{
         }
     }
 
-    pub fn get_matches(&self, html_node : &HTMLElement<'a>) -> Vec<HTMLElement<'a>>{
+    pub fn get_matches(&self, _html_node : &HTMLElement<'a>) -> Vec<HTMLElement<'a>>{
 
         todo!("Implement this once html nodes have parents");
 
@@ -123,7 +123,7 @@ impl<'a> HCombinedQuery<'a>{
                 let (ref a, ref b) = **tuple;
                 a.matches(html_node) || b.matches(html_node)
             }
-            HCombinedQuery::DirectChild(tuple) => { panic!("TODO : Implement Direct children in combined queries !") }
+            HCombinedQuery::DirectChild(_tuple) => { panic!("TODO : Implement Direct children in combined queries !") }
             HCombinedQuery::IndirectChild(_) => { panic!("TODO : Implement Indirect children in combined queries")}
         }
     }

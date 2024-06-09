@@ -50,7 +50,7 @@ pub struct HTMLElement<'a>{
 
 impl<'a> HTMLElement<'a>{
 
-    //Handle allocations and references
+    //Create a reference to a new element
     pub fn new() -> HTMLElementReference<'a> {
 
         let elem = Rc::new(RefCell::new(HTMLElement{
@@ -65,12 +65,23 @@ impl<'a> HTMLElement<'a>{
         elem.borrow_mut().weak_self = Rc::downgrade(&elem);
         elem
     }
+
+    /// Gives a reference to this element
     pub fn reference(&self) -> Option<HTMLElementReference<'a>>{
         self.weak_self.upgrade()
     }
-    pub fn weak_reference(&self) -> HTMLElementWeakReference<'a>{
-        self.weak_self.clone()
+
+    /// Gives a weak reference to this element
+    pub fn weak_reference(&self) -> HTMLElementWeakReference<'a>{ self.weak_self.clone() }
+
+    /// Returns a strong reference to this element's parent
+    pub fn parent(&self) -> Option<HTMLElementReference<'a>>{
+        match &self.parent{
+            None => { None }
+            Some(parent) => { Weak::upgrade(&parent) }
+        }
     }
+
 
 
     //Edit the thing
@@ -99,7 +110,7 @@ impl<'a> HTMLElement<'a>{
         }
         self
     }
-    pub fn add_child(&mut self, mut child: HTMLElementReference<'a>) -> &mut Self {
+    pub fn add_child(&mut self, child: HTMLElementReference<'a>) -> &mut Self {
         child.borrow_mut().parent = Some(self.weak_self.clone());
         self.children.push(HTMLEnum::Element(child));
         self
@@ -136,7 +147,7 @@ impl<'a> HTMLElement<'a>{
     }
     pub fn rec_html_children(&self) -> Vec<HTMLElementReference<'a>> {
 
-        let mut res = vec![];
+        let res = vec![];
 
 
         return res;
