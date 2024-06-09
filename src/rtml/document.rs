@@ -43,7 +43,7 @@ impl<'a> HTMLDocument<'a>{
                 HTMLEnum::Text(text) => {
                     body.borrow_mut().add_text(text);
                 }
-                HTMLEnum::Element(mut html_node) => {
+                HTMLEnum::Element(html_node) => {
                     //Figure out if its contents go to head or body
                     //Do the same to children
 
@@ -72,8 +72,8 @@ impl<'a> HTMLDocument<'a>{
     }
 
     pub fn from_tokens(tokens : Vec<HTMLEnum<'a>>) -> HTMLDocument<'a>{
-        let mut head = HTMLElement::new();
-        let mut body = HTMLElement::new();
+        let head = HTMLElement::new();
+        let body = HTMLElement::new();
 
         Self::recursive_sort(tokens, head.clone(), body.clone());
 

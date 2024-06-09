@@ -1,4 +1,5 @@
 use std::fs;
+use crate::rhp::process_document;
 use crate::rtml::document::HTMLDocument;
 
 
@@ -17,7 +18,7 @@ fn main() {
                 .replace("\t", "");
 
             let tokens = parse(&filtered).expect("uh oh");
-            let document = HTMLDocument::from_tokens(tokens);
+            let document = HTMLDocument::from_tokens(process_document(tokens));
 
             println!("{}", document);
 

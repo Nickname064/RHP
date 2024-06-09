@@ -126,9 +126,31 @@ impl<'a> HTMLElement<'a>{
         self
     }
 
-    ///Disconnect this node from its parent, returns the ownership
+    ///Disconnect this node from its parent
     pub fn orphanize(&self) -> &Self {
-        todo!("Here");
+
+        match self.parent(){
+            None => { self } //No parent, the job is done
+            Some(parent) => {
+
+                let mut parent_borrow = parent.borrow_mut();
+
+                match parent_borrow.children.iter().position(|x| {
+                    match x {
+                        HTMLEnum::Element(reference) => {
+                            Weak::ptr_eq(&Rc::downgrade(reference), &self.weak_self)
+                        }
+                        _ => { false }
+                    }
+                }){
+                    None => { panic!("The child doesn't appear in its parent children"); }
+                    Some(index) => {
+                        parent_borrow.children.remove(index);
+                        return self;
+                    }
+                }
+            }
+        }
     }
 
     //Getter methods
@@ -145,15 +167,66 @@ impl<'a> HTMLElement<'a>{
     pub fn self_closing(&self) -> bool {
         SELF_CLOSABLE_TAGS.iter().find(|&&x| x == self.name).is_some()
     }
+
+    // Returns the chain of parents of this node, starting from the closest
+    pub fn parent_chain(&self) -> Vec<HTMLElementReference<'a>>{
+        let mut result = vec![];
+
+        let mut x : HTMLElementReference;
+
+        if let Some(parent) = self.parent(){
+            x = parent.clone();
+            result.push(parent);
+        }
+        else{
+            return result;
+        }
+
+        loop{
+            let par = x.borrow().parent();
+
+            if let Some(parent) = par{
+                x = parent.clone();
+                result.push(parent);
+            }
+            else{ break; }
+        }
+
+        result
+    }
+
+    // Returns the chain of HTMLElement children of this node, in a breadth-first order
+    // Useful for quickly looking through nodes
     pub fn rec_html_children(&self) -> Vec<HTMLElementReference<'a>> {
 
-        let res = vec![];
+        let mut result = vec![];
 
+        for child in &self.children{
+            match child{
+                HTMLEnum::Element(html) => {
+                    result.push(html.clone());
+                    result.append(&mut html.borrow().rec_html_children());
+                }
+                _ => {}
+            }
+        }
 
-        return res;
+        return result;
     }
 }
 
+
+impl HTMLEnum<'_>{
+    fn fmt(&self, f: &mut Formatter<'_>, _rec_level : usize) -> std::fmt::Result {
+        match self{
+            HTMLEnum::Text(str) => { write!(f, "{}", str) }
+            HTMLEnum::Element(elem) => {
+                write!(f, "{}", elem.borrow())
+            }
+            HTMLEnum::Comment(str) => { write!(f, "<!--{}-->", str) }
+        }
+    }
+}
 
 impl Display for HTMLEnum<'_>{
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

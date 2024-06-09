@@ -1,10 +1,8 @@
 
+use crate::rtml::html_elements::{HTMLElement, HTMLElementReference, HTMLEnum};
+use crate::rtml::html_elements::HTMLEnum::Element;
 
-use crate::rtml::html_elements::{HTMLEnum};
-
-
-/*
-const directive_names : &[&str] = &[
+const DIRECTIVE_NAMES: &[&str] = &[
     "define", //Define a custom element
     //"import", //Import another page's custom elements
     //"insert" //Insert the contents of another page here
@@ -28,7 +26,7 @@ enum Directives<'a>{
 }
 
 /// Reads a HTMLToken Stream, and extracts the top-level special directives
-fn filter_out_directives<'a>(stream : Vec<HTMLEnum<'a>>) -> (Vec<Directives<'a>>, Vec<HTMLEnum<'a>>){
+fn filter_out_directives(stream : Vec<HTMLEnum>) -> (Vec<Directives>, Vec<HTMLEnum>){
 
     let mut directives = vec![];
     let mut out = vec![];
@@ -39,11 +37,11 @@ fn filter_out_directives<'a>(stream : Vec<HTMLEnum<'a>>) -> (Vec<Directives<'a>>
 
                 let borrow = html_element.borrow();
 
-                if directive_names.contains(&borrow.name().to_lowercase().as_str()){
-                    directives.push(parse_directives(html_element));
+                if DIRECTIVE_NAMES.contains(&borrow.name().to_lowercase().as_str()){
+                    directives.push(parse_directives(html_element.clone()));
                     continue;
                 } else {
-                    out.push(Element(html_element));
+                    out.push(Element(html_element.clone()));
                 }
             }
             _ => {
@@ -56,15 +54,18 @@ fn filter_out_directives<'a>(stream : Vec<HTMLEnum<'a>>) -> (Vec<Directives<'a>>
 }
 
 ///Parses a HTMLElement representing a directive
-fn parse_directives(directive : HTMLElementReference) -> Directives {
+fn parse_directives<'a>(directive : HTMLElementReference<'a>) -> Directives<'a> {
 
-    match directive.name().to_lowercase().as_str(){
+    let directive_borrow = directive.borrow();
+
+    match directive_borrow.name().to_lowercase().as_str(){
         "define" => {
             //Parse define
 
-            match directive
+            match directive_borrow
                 .rec_html_children()
                 .iter()
+                .map(|x| x.borrow())
                 .find(|x| x.name.to_lowercase().as_str() == "children" && x.children.len() != 0) {
                 None => {}
                 Some(x) => {
@@ -72,8 +73,9 @@ fn parse_directives(directive : HTMLElementReference) -> Directives {
                 }
             }
 
-            let tagname = String::from(directive.get_attribute("tagname").expect("define without tagname"));
-            let contents = directive.children;
+
+            let tagname = String::from(directive_borrow.get_attribute("tagname").expect("define without tagname"));
+            let contents = directive_borrow.children.clone();
 
             Directives::DEFINE(DEFINE {
                 tagname,
@@ -107,13 +109,13 @@ impl<'a> DEFINE<'_>{
                         let transformed_element = HTMLElement::new();
                         let mut element_borrow = transformed_element.borrow_mut();
 
-                        element_borrow.name = html_borrow.name();
-                        element_borrow.args = html_borrow.args();
-                        element_borrow.attributes = html_borrow.attributes();
+                        element_borrow.name = html_borrow.name;
+                        element_borrow.args = html_borrow.args.clone();
+                        element_borrow.attributes = html_borrow.attributes.clone();
                         element_borrow.children = self.apply_to(html_borrow.children.clone(), tag_invocation.clone());
-                        element_borrow.parent = html_borrow.parent;
+                        element_borrow.parent = html_borrow.parent.clone();
 
-                        parsed.push(transformed_element);
+                        parsed.push(HTMLEnum::Element(transformed_element.clone()));
                     }
                 }
                 any => { parsed.push(any); }
@@ -129,14 +131,15 @@ impl<'a> DEFINE<'_>{
         let mut processed = vec![];
 
         for node in html_stream{
-            match node{
-                Element(mut html_element) => {
-                    if let Some(tag) = custom_tags.iter().find(|elem| elem.tagname == html_element.name){
+            match node {
+                Element(html_element) => {
+                    if let Some(tag) = custom_tags.iter().find(|elem| elem.tagname == html_element.borrow().name){
                         processed.append(&mut tag.apply_to(tag.contents.clone(), html_element));
                     }
                     else{
-                        html_element.children = Self::process_stream(html_element.children, custom_tags);
-                        processed.push(Element(html_element));
+                        let mut borrow = html_element.borrow_mut();
+                        borrow.children = Self::process_stream(borrow.children.clone(), custom_tags);
+                        processed.push(Element(html_element.clone()));
                     }
 
                 }
@@ -150,14 +153,14 @@ impl<'a> DEFINE<'_>{
     /// Taking in a DEFINE statement, and a list of the exising custom element,
     /// returns the dependency list of the given unprocessed DEFINE statement
     /// On a processed DEFINE statement, get_dependencies will return an empty vec
-    fn get_dependencies(&self, custom_tags : &'a Vec<DEFINE<'a>>) -> Vec<String>{
+    fn get_dependencies(&self, custom_tags : &Vec<DEFINE<'a>>) -> Vec<String>{
         let mut dependencies = vec![];
-        let mut possible_deps: Vec<&'a str> = custom_tags.iter().map(|x| x.tagname.as_str()).collect();
+        let mut possible_deps: Vec<&str> = custom_tags.iter().map(|x| x.tagname.as_str()).collect();
 
         for node in &self.contents{
             match node{
                 Element(html) => {
-                    for rec in html.rec_html_children(){
+                    for rec in html.borrow().rec_html_children().iter().map(|x| x.borrow()) {
                         if let Some(index) = possible_deps.iter().position(|&x| x == rec.name) {
                             dependencies.push(String::from(rec.name));
                             possible_deps.swap_remove(index);
@@ -189,8 +192,6 @@ impl<'a> DEFINE<'_>{
 
             dependencies.push((elem_cp, deps))
         }
-
-
 
         loop {
             //Split the vectors into two groups
@@ -242,4 +243,3 @@ pub fn process_document(tokens : Vec<HTMLEnum>) -> Vec<HTMLEnum>{
     processed
 }
 
-*/

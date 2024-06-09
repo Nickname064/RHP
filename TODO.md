@@ -4,7 +4,7 @@
 - [X] Implement basic Custom Elements
 - [X] Implement Recursive Custom Elements
   - [X] Avoid infinite recursive algorithm
-- [ ] Give elements easy access to their parents
+- [X] Give elements easy access to their parents
 - [ ] Implement child selectors
 
 ## Language
