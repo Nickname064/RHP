@@ -59,12 +59,14 @@ fn parse_directives(directive : HTMLElement) -> Directives {
         "define" => {
             //Parse define
 
-            if directive
+            match directive
                 .rec_html_children()
                 .iter()
-                .find(|x| x.name.to_lowercase().as_str() == "children" && x.children.len() != 0)
-                .is_some(){
-                panic!("Children tags are not allowed to have children of their own");
+                .find(|x| x.name.to_lowercase().as_str() == "children" && x.children.len() != 0) {
+                None => {}
+                Some(x) => {
+                    panic!("children tags are not allowed to have children of their own : {}, {:?}", x, x.children)
+                }
             }
 
             let tagname = String::from(directive.get_attribute("tagname").expect("define without tagname"));
@@ -170,11 +172,18 @@ impl<'a> DEFINE<'_>{
 
         for elem in &custom_tags {
             let elem_cp = elem.clone();
-            dependencies.push((elem_cp, elem.get_dependencies(&custom_tags)))
+            let deps = elem.get_dependencies(&custom_tags);
+
+            if deps.contains(&elem.tagname){
+                panic!("Infinitely recursive element : {}", elem_cp.tagname);
+            }
+
+            dependencies.push((elem_cp, deps))
         }
 
-        loop {
 
+
+        loop {
             //Split the vectors into two groups
             let mut ripe = vec![];
             let mut unripe = vec![];

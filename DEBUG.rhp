@@ -1,13 +1,16 @@
-<define tagname="custom-1">
-    <h1>Ceci est un titre</h1>
+<define tagname="c3">
+    <p><c1><children/></c1></p>
+</define>
+
+<define tagname="c1">
+    <h1>I ALONE AM THE HONORED ONE</h1>
     <div><children/></div>
 </define>
 
-<define tagname="custom-2">
-    <custom-1/>
-    <h1>Ceci est un autre titre</h1>
+<define tagname="c2">
+    <c3><children/></c3>
 </define>
 
 <div>
-    <custom-2/>
+    <c3>Hello World !</c3>
 </div>

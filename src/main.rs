@@ -9,7 +9,11 @@ fn main() {
     match fs::read_to_string(r#"C:\Users\wanth\Documents\GitHub\RHP\DEBUG.rhp"#){
         Ok(str) => {
 
-            let doc = HTMLDocument::from_rhp(&str).unwrap();
+            let filtered = str.replace("\r", "")
+                .replace("\n", "")
+                .replace("\t", "");
+
+            let doc = HTMLDocument::from_rhp(&filtered).unwrap();
 
             println!("{}", doc);
         }

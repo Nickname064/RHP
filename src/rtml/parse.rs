@@ -207,7 +207,7 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
     let mut equaled : bool = false; //An equal sign was parsed, but an attribute value has not been parsed yes
     let mut quote_symbol = '"'; //The last symbol used to start a string
 
-    let self_closed : bool = SELF_CLOSABLE_TAGS.contains(&&*name.to_lowercase()); //Is the tag self-closed ? (like <br>)
+    let mut self_closed : bool = SELF_CLOSABLE_TAGS.contains(&&*name.to_lowercase()); //Is the tag self-closed ? (like <br>)
     let sterile : bool = STERILE_TAGS.contains(&&*name.to_lowercase()); //Is the tag unable to have children (like script) ? (here for optimization)
 
     for (index, char) in document.char_indices(){
@@ -410,6 +410,7 @@ fn parse_tag<'a>(mut document: &'a str, name : &'a str) -> Result<(&'a str, HTML
                         }
 
                         mode = Mode::Closed;
+                        self_closed = true;
                     }
 
                     '"' | '\'' => {
