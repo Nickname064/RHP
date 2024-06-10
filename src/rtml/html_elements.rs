@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, format, Formatter};
 use std::rc::{Rc, Weak};
 
 use crate::rtml::parse::SELF_CLOSABLE_TAGS;
@@ -270,11 +270,15 @@ impl PrettyPrintable for HTMLElement<'_>{
         buf += &format!("<{}", self.name);
 
         for (attr, val) in &self.attributes{
-            buf += &format!(" {}={}", attr, val);
+            if val.len() > 0 {
+                buf += &format!(" {}={}", attr, val);
+            } else{
+                buf += &format!(" {}", attr);
+            }
         }
 
         if self.self_closing(){
-            buf += "/>";
+            buf += ">";
         } else{
             buf += ">";
 

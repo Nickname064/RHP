@@ -12,6 +12,7 @@ use crate::rtml::parse::parse;
 mod hqueries;
 mod rhp;
 mod rtml;
+mod utility;
 
 fn main() {
 

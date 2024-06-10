@@ -7,7 +7,7 @@ const DIRECTIVE_NAMES: &[&str] = &[
              //"insert" //Insert the contents of another page here
 ];
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct DEFINE<'a> {
     ///The name(identifier) of the custom tag
     pub tagname: String,
@@ -165,13 +165,20 @@ impl<'a> DEFINE<'_> {
         let mut dependencies = vec![];
         let mut possible_deps: Vec<&str> = custom_tags.iter().map(|x| x.tagname.as_str()).collect();
 
+        println!("{:#?} vs {:#?}", &self, possible_deps);
+
         for node in &self.contents {
             match node {
                 Element(html) => {
-                    for rec in html.borrow().rec_html_children().iter().map(|x| x.borrow()) {
+                    for rec in html.borrow().rec_html_children().iter().chain(vec![&html.clone()]).map(|x| x.borrow()) {
+                        //For each element in the tree
+                        //Don't forget to consider the element itself
+
                         if let Some(index) = possible_deps.iter().position(|&x| x == rec.name) {
-                            dependencies.push(String::from(rec.name));
-                            possible_deps.swap_remove(index);
+                            //If their name matches a tag, add dependency
+
+                            dependencies.push(String::from(rec.name)); //Add the dependency
+                            possible_deps.swap_remove(index); //You can't have the same dependency twice
                         }
                     }
                 }

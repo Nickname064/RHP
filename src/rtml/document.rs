@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter};
 
 /// A HTML Document.
 pub struct HTMLDocument<'a> {
+    doctype : Option<HTMLElementReference<'a>>,
     head: HTMLElementReference<'a>,
     body: HTMLElementReference<'a>,
 }
@@ -57,22 +58,36 @@ impl<'a> HTMLDocument<'a> {
         }
     }
 
-    pub fn from_tokens(tokens: Vec<HTMLEnum<'a>>) -> HTMLDocument<'a> {
+    pub fn from_tokens(mut tokens: Vec<HTMLEnum<'a>>) -> HTMLDocument<'a> {
         let head = HTMLElement::new();
         let body = HTMLElement::new();
+
+        let doctype : Option<HTMLElementReference>;
+
+        match tokens.first(){
+            Some(HTMLEnum::Element(html)) if html.borrow().name.to_lowercase() == "!doctype" => {
+                doctype = Some(html.clone());
+                tokens.remove(0);
+            }
+            _ => { doctype = None; }
+        }
 
         Self::recursive_sort(tokens, head.clone(), body.clone());
 
         head.borrow_mut().name = "head";
         body.borrow_mut().name = "body";
 
-        HTMLDocument { head, body }
+        HTMLDocument { doctype, head, body }
     }
 }
 
 impl Display for HTMLDocument<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "<!DOCTYPE html>")?;
+
+        if let Some(d) = &self.doctype{
+            write!(f, "{}", d.borrow())?;
+        }
+
         write!(f, "{}", self.head.borrow())?;
         write!(f, "{}", self.body.borrow())
     }
@@ -82,7 +97,10 @@ impl PrettyPrintable for HTMLDocument<'_>{
     fn pretty_fmt_rec(&self, depth: usize) -> String {
         let mut buf = String::new();
 
-        buf += &format!("{}<!doctype html>\n", "\t".repeat(depth));
+        if let Some(d) = &self.doctype{
+            buf += &format!("{}{}\n", "\t".repeat(depth), d.borrow().pretty_fmt_rec(depth));
+        }
+
         buf += &self.head.borrow().pretty_fmt_rec(depth);
         buf += "\n";
         buf += &self.body.borrow().pretty_fmt_rec(depth);
