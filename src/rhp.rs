@@ -1,3 +1,4 @@
+use crate::hqueries::HCombinedQuery;
 use crate::rtml::html_elements::HTMLEnum::Element;
 use crate::rtml::html_elements::{HTMLElement, HTMLElementReference, HTMLEnum};
 
@@ -88,6 +89,7 @@ fn parse_directives<'a>(directive: HTMLElementReference<'a>) -> Directives<'a> {
 }
 
 impl<'a> DEFINE<'_> {
+
     /// Filters all the elements of list(containing the custom tag contents)
     /// to apply modifiers corresponding to the tag invocation.
     fn apply_to(
@@ -102,8 +104,26 @@ impl<'a> DEFINE<'_> {
                 Element(html) => {
                     let html_borrow = html.borrow();
 
-                    if html_borrow.name == "children" {
-                        parsed.append(&mut tag_invocation.borrow().children.clone());
+                    if html_borrow.name == "children" { //Handle pasting children
+
+                        let HTMLQuery : HCombinedQuery = HCombinedQuery::from_str(
+                            html_borrow.attributes.iter().find(|(a,_)| a == &"select").unwrap_or(&("", "")).1
+                        );
+
+                        let mut possible_children = tag_invocation.borrow().children.clone();
+
+                        let mut filtered_children = possible_children.into_iter().filter(|x|{
+                            match x {
+                                HTMLEnum::Element(html) => {
+                                    HTMLQuery.matches(&html.borrow())
+                                }
+                                _ => { false }
+                            }
+                        }).collect();
+
+                        drop(HTMLQuery);
+
+                        parsed.append(&mut filtered_children);
                     } else {
                         let transformed_element = HTMLElement::new();
                         let mut element_borrow = transformed_element.borrow_mut();
@@ -111,8 +131,10 @@ impl<'a> DEFINE<'_> {
                         element_borrow.name = html_borrow.name;
                         element_borrow.args = html_borrow.args.clone();
                         element_borrow.attributes = html_borrow.attributes.clone();
-                        element_borrow.children =
-                            self.apply_to(html_borrow.children.clone(), tag_invocation.clone());
+
+                        element_borrow.children = vec![];
+                        element_borrow.add_children(self.apply_to(html_borrow.children.clone(), tag_invocation.clone()));
+
                         element_borrow.parent = html_borrow.parent.clone();
 
                         parsed.push(HTMLEnum::Element(transformed_element.clone()));
@@ -164,8 +186,6 @@ impl<'a> DEFINE<'_> {
     fn get_dependencies(&self, custom_tags: &Vec<DEFINE<'a>>) -> Vec<String> {
         let mut dependencies = vec![];
         let mut possible_deps: Vec<&str> = custom_tags.iter().map(|x| x.tagname.as_str()).collect();
-
-        println!("{:#?} vs {:#?}", &self, possible_deps);
 
         for node in &self.contents {
             match node {

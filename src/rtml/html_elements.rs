@@ -73,6 +73,19 @@ impl<'a> HTMLElement<'a> {
         self.weak_self.clone()
     }
 
+    pub fn duplicate(&self) -> HTMLElementReference<'a>{
+        let dup = Self::new();
+
+        let mut dup_borrow = dup.borrow_mut();
+        dup_borrow.name = self.name;
+        dup_borrow.args = self.args.clone();
+        dup_borrow.attributes = self.attributes.clone();
+        drop(dup_borrow);
+        //Cloning the parent reference would make no sense, as the parent wouldn't be pointing to a newly created element
+
+        dup
+    }
+
     /// Returns a strong reference to this element's parent
     pub fn parent(&self) -> Option<HTMLElementReference<'a>> {
         match &self.parent {
@@ -109,6 +122,7 @@ impl<'a> HTMLElement<'a> {
         self
     }
     pub fn add_child(&mut self, child: HTMLElementReference<'a>) -> &mut Self {
+        child.borrow_mut().orphanize();
         child.borrow_mut().parent = Some(self.weak_self.clone());
         self.children.push(HTMLEnum::Element(child));
         self
@@ -125,7 +139,7 @@ impl<'a> HTMLElement<'a> {
     }
 
     ///Disconnect this node from its parent
-    pub fn orphanize(&self) -> &Self {
+    pub fn orphanize(&mut self) -> &mut Self {
         match self.parent() {
             None => self, //No parent, the job is done
             Some(parent) => {
@@ -138,10 +152,11 @@ impl<'a> HTMLElement<'a> {
                     _ => false,
                 }) {
                     None => {
-                        panic!("The child doesn't appear in its parent children");
+                        panic!("A child doesn't appear in its parent children");
                     }
                     Some(index) => {
                         parent_borrow.children.remove(index);
+                        self.parent = None;
                         return self;
                     }
                 }

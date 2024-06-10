@@ -1,10 +1,5 @@
-<!doctype html>
-
-<define tagname="c1">
-    <c1>I ALONE AM THE HONORED ONE</c1>
-    <div><children/></div>
-</define>
-
 <div>
-    <c1>Hello World !</c1>
-</div>
+    <c1>
+        Hello World !
+        <div>I ALONE AM THE HONORED ONE</div>
+    </c1>

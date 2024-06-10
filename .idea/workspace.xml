@@ -7,14 +7,14 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="30cbb849-498c-4ce7-89ce-b1286e2864dd" name="Changes" comment="Added prettyprint to turn HTML elements into a properly formatted document">
-      <change afterPath="$PROJECT_DIR$/src/utility.rs" afterDir="false" />
+    <list default="true" id="30cbb849-498c-4ce7-89ce-b1286e2864dd" name="Changes" comment="Corrected infinitely recursive children not being detected">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DEBUG.rhp" beforeDir="false" afterPath="$PROJECT_DIR$/DEBUG.rhp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rhp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rhp.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/rtml/document.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/document.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rtml/html_elements.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/html_elements.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rtml/parse.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/parse.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -177,7 +177,7 @@
       <workItem from="1717874831631" duration="97000" />
       <workItem from="1717915245378" duration="5541000" />
       <workItem from="1717928925918" duration="25426000" />
-      <workItem from="1717973608425" duration="1183000" />
+      <workItem from="1717973608425" duration="7243000" />
     </task>
     <task id="LOCAL-00001" summary="First working version, simply define custom tags and replace them, while passing the children">
       <option name="closed" value="true" />
@@ -243,7 +243,15 @@
       <option name="project" value="LOCAL" />
       <updated>1717959824531</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Corrected infinitely recursive children not being detected">
+      <option name="closed" value="true" />
+      <created>1717993902112</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1717993902112</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -269,6 +277,28 @@
     <MESSAGE value="Refactoring : Changed HTMLDocument to make it work with the new reference model" />
     <MESSAGE value="Refactoring : Everything is now adapted to work with the reference model" />
     <MESSAGE value="Added prettyprint to turn HTML elements into a properly formatted document" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added prettyprint to turn HTML elements into a properly formatted document" />
+    <MESSAGE value="Corrected infinitely recursive children not being detected" />
+    <option name="LAST_COMMIT_MESSAGE" value="Corrected infinitely recursive children not being detected" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/rtml/parse.rs</url>
+          <line>216</line>
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/rtml/parse.rs</url>
+          <line>305</line>
+          <option name="timeStamp" value="15" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="CargoCommandRunConfiguration">
+        <watch expression="self.name" language="Rust" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>

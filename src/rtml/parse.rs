@@ -31,13 +31,17 @@ macro_rules! find_from {
 ///
 /// Parses a string of tokens representing a HTML page
 ///
-/// # Arguments
+/// ## Arguments
 ///
 /// * `document` - the string to be parsed.
 ///
-/// # Returns
+/// ## Returns
 /// A Vector of HTMLEnums, representing the contents of the HTML page.
-pub fn parse<'a>(mut document: &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserError> {
+pub fn parse<'a>(mut document: &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserError>{
+    parse_rec(document, None)
+}
+
+pub fn parse_rec<'a>(mut document: &'a str, parent_name : Option<&str>) -> Result<Vec<HTMLEnum<'a>>, ParserError> {
     //We start in regular data mode.
     //For now, what we see is text.
     //Let's try to find a tag
@@ -219,12 +223,15 @@ fn parse_tag<'a>(
                             match document.find(&end_tag) {
                                 None => {
                                     //No end found, close the tag and parse the children
+                                    //Doing this allows for unclosed tags in a document
+                                    // ex : <p> THIS IS A PARAGRAPH
+                                    // gets turned into <p> THIS IS A PARAGRAPH</p>
 
                                     if sterile {
                                         res.add_text(document);
                                     } else {
                                         //Parse the children
-                                        res.add_children(parse(document)?);
+                                        res.add_children(parse_rec(document, Some(res.name))?);
                                     }
 
                                     //Because the rest of the document has been parsed,
@@ -242,7 +249,7 @@ fn parse_tag<'a>(
                                         res.add_text(recdoc);
                                     } else {
                                         //Parse the children
-                                        res.add_children(parse(recdoc)?);
+                                        res.add_children(parse_rec(recdoc, Some(res.name))?);
                                     }
 
                                     drop(res);
@@ -337,7 +344,7 @@ fn parse_tag<'a>(
                                         res.add_text(document);
                                     } else {
                                         //Parse the children
-                                        res.add_children(parse(document)?);
+                                        res.add_children(parse_rec(document, Some(res.name))?);
                                     }
 
                                     //Because the rest of the document has been parsed,
@@ -355,7 +362,7 @@ fn parse_tag<'a>(
                                         res.add_text(recdoc);
                                     } else {
                                         //Parse the children
-                                        res.add_children(parse(recdoc)?);
+                                        res.add_children(parse_rec(recdoc, Some(res.name))?);
                                     }
 
                                     drop(res);
