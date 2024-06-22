@@ -5,14 +5,16 @@ use std::fmt::Formatter;
 use std::fs::File;
 use std::io::Write;
 use crate::hqueries::{HCombinedQuery, HQuery};
+use crate::mdparse::mdparse::markdown_parse;
 use crate::rtml::html_elements::PrettyPrintable;
+use crate::rtml::reparse::{consume_attr_value, consume_attribute, consume_tag_name, consume_value, html_parse};
 
-use crate::rtml::parse::parse;
 
 mod hqueries;
 mod rhp;
 mod rtml;
 mod utility;
+mod mdparse;
 
 fn main() {
 
@@ -21,13 +23,17 @@ fn main() {
 
     match fs::read_to_string(r#"C:\Users\wanth\Documents\GitHub\RHP\DEBUG.rhp"#) {
         Ok(str) => {
-            let filtered = str.replace("\r", "").replace("\n", "").replace("\t", "");
 
-            let tokens = parse(&filtered).expect("uh oh");
+
+            let tokens = html_parse(&str);
             println!("{:#?}", tokens);
-            let document = HTMLDocument::from_tokens(process_document(tokens));
 
-            fs::write(r#"C:\Users\wanth\Documents\GitHub\RHP\Output.html"#, document.pretty_fmt());
+            /*
+                let processed = process_document(tokens);
+                let document = HTMLDocument::from_tokens(processed);
+            */
+
+            //fs::write(r#"C:\Users\wanth\Documents\GitHub\RHP\Output.html"#, document.pretty_fmt());
 
             //println!("{}", document);
         }
@@ -35,16 +41,21 @@ fn main() {
             panic!("Umm, what the sigma")
         }
     }
+
+
+
+    //let dbg_str = "# 1. test ```HELLO WORLD```";
+    //println!("{:?}", markdown_parse(dbg_str));
 }
 
 #[cfg(test)]
 
 #[test]
 fn test_parse_1(){
-    assert!(parse("<div></div>").is_ok());
+    assert!(html_parse("<div></div>").is_ok());
 }
 
 #[test]
 fn test_parse_incorrect(){
-    assert!(parse("<h2></div>").is_err());
+    assert!(html_parse("<h2></div>").is_err());
 }

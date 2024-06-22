@@ -1,5 +1,1 @@
-<div>
-    <c1>
-        Hello World !
-        <div>I ALONE AM THE HONORED ONE</div>
-    </c1>
+<define tagname="test" this="that">HELLO WORLD !</define>

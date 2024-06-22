@@ -7,13 +7,19 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="30cbb849-498c-4ce7-89ce-b1286e2864dd" name="Changes" comment="Corrected infinitely recursive children not being detected">
+    <list default="true" id="30cbb849-498c-4ce7-89ce-b1286e2864dd" name="Changes" comment="Patched parser to consume the right tag ends">
+      <change afterPath="$PROJECT_DIR$/src/mdparse/mdparse.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/mdparse/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/mdparse/symbols.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/mdparse/tests.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/rtml/reparse.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/rtml/tok.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DEBUG.rhp" beforeDir="false" afterPath="$PROJECT_DIR$/DEBUG.rhp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/rhp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rhp.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rtml/html_elements.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/html_elements.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rtml/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rtml/parse.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rtml/parse.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -24,6 +30,7 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
+        <option value="HTML File" />
         <option value="Rust File" />
       </list>
     </option>
@@ -40,7 +47,7 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/Nickname064/RHP.git&quot;,
-    &quot;accountId&quot;: &quot;27ae5248-886c-4c29-b8e3-b69ee160cc76&quot;
+    &quot;accountId&quot;: &quot;aad66481-ef11-4a7b-b5bc-816557254d90&quot;
   }
 }</component>
   <component name="MacroExpansionManager">
@@ -55,27 +62,36 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Cargo.Run rhp.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Test test_parse_nb.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.test.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/wanth/Documents/GitHub/RHP/rhp/src/rtml&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
-    &quot;org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon&quot;: &quot;&quot;,
-    &quot;org.rust.disableDetachedFileInspectionC:/Users/wanth/Documents/GitHub/RHP/rhp/src/rtml/document.rs&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;language.rust.cargo.check&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Cargo.Run rhp.executor": "Run",
+    "Cargo.Test mdparse::tests::test_parse_1.executor": "Run",
+    "Cargo.Test mdparse::tests::title_identify.executor": "Run",
+    "Cargo.Test rtml::reparse::test_name_1.executor": "Run",
+    "Cargo.Test test_parse_1.executor": "Run",
+    "Cargo.Test test_parse_incorrect.executor": "Debug",
+    "Cargo.Test test_parse_nb.executor": "Run",
+    "Cargo.test.executor": "Run",
+    "DefaultHtmlFileTemplate": "HTML File",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.rust.reset.selective.auto.import": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/wanth/Documents/GitHub/RHP",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
+    "org.rust.disableDetachedFileInspectionC:/Users/wanth/Documents/GitHub/RHP/rhp/src/rtml/document.rs": "true",
+    "org.rust.hideNoCargoProjectNotificationsC:/Users/wanth/.rustup/toolchains/stable-x86_64-pc-windows-msvc/lib/rustlib/src/rust/library/std/src/panicking.rs": "true",
+    "service.view.auto.scroll.to.source": "true",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\wanth\Documents\GitHub\RHP\rhp\src\rtml" />
@@ -114,8 +130,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test test_parse_nb" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package rhp --bin rhp test_parse_nb -- --exact" />
+    <configuration name="Test mdparse::tests::title_identify" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package rhp --bin rhp mdparse::tests::title_identify -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -131,8 +147,25 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="test" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test" />
+    <configuration name="Test test_parse_1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package rhp --bin rhp test_parse_1 -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test test_parse_incorrect" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package rhp --bin rhp test_parse_incorrect -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -151,8 +184,9 @@
     <recent_temporary>
       <list>
         <item itemvalue="Cargo.Run rhp" />
-        <item itemvalue="Cargo.Test test_parse_nb" />
-        <item itemvalue="Cargo.test" />
+        <item itemvalue="Cargo.Test test_parse_incorrect" />
+        <item itemvalue="Cargo.Test test_parse_1" />
+        <item itemvalue="Cargo.Test mdparse::tests::title_identify" />
       </list>
     </recent_temporary>
   </component>
@@ -178,6 +212,25 @@
       <workItem from="1717915245378" duration="5541000" />
       <workItem from="1717928925918" duration="25426000" />
       <workItem from="1717973608425" duration="7243000" />
+      <workItem from="1718700080302" duration="23000" />
+      <workItem from="1718700112594" duration="7468000" />
+      <workItem from="1718723266445" duration="3730000" />
+      <workItem from="1718731174833" duration="3124000" />
+      <workItem from="1718742134038" duration="119000" />
+      <workItem from="1718779056632" duration="9672000" />
+      <workItem from="1718832617903" duration="1560000" />
+      <workItem from="1718917022849" duration="1899000" />
+      <workItem from="1718919243795" duration="735000" />
+      <workItem from="1718961886291" duration="3272000" />
+      <workItem from="1718968185779" duration="10068000" />
+      <workItem from="1718990362926" duration="1601000" />
+      <workItem from="1719005082371" duration="878000" />
+      <workItem from="1719006527701" duration="61000" />
+      <workItem from="1719039852911" duration="10553000" />
+      <workItem from="1719055593465" duration="244000" />
+      <workItem from="1719055915348" duration="273000" />
+      <workItem from="1719059547097" duration="2570000" />
+      <workItem from="1719062824195" duration="7185000" />
     </task>
     <task id="LOCAL-00001" summary="First working version, simply define custom tags and replace them, while passing the children">
       <option name="closed" value="true" />
@@ -278,27 +331,28 @@
     <MESSAGE value="Refactoring : Everything is now adapted to work with the reference model" />
     <MESSAGE value="Added prettyprint to turn HTML elements into a properly formatted document" />
     <MESSAGE value="Corrected infinitely recursive children not being detected" />
-    <option name="LAST_COMMIT_MESSAGE" value="Corrected infinitely recursive children not being detected" />
+    <MESSAGE value="Patched parser to consume the right tag ends" />
+    <option name="LAST_COMMIT_MESSAGE" value="Patched parser to consume the right tag ends" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/rtml/parse.rs</url>
-          <line>216</line>
-          <option name="timeStamp" value="14" />
+          <url>file://$PROJECT_DIR$/src/main.rs</url>
+          <line>61</line>
+          <option name="timeStamp" value="18" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/rtml/parse.rs</url>
-          <line>305</line>
-          <option name="timeStamp" value="15" />
+          <url>file://$PROJECT_DIR$/src/rtml/reparse.rs</url>
+          <line>383</line>
+          <option name="timeStamp" value="30" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/rtml/reparse.rs</url>
+          <line>219</line>
+          <option name="timeStamp" value="32" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
-    <watches-manager>
-      <configuration name="CargoCommandRunConfiguration">
-        <watch expression="self.name" language="Rust" />
-      </configuration>
-    </watches-manager>
   </component>
 </project>

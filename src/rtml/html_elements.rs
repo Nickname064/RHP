@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::fmt::{Display, format, Formatter};
 use std::rc::{Rc, Weak};
 
-use crate::rtml::parse::SELF_CLOSABLE_TAGS;
+use crate::rtml::reparse::SELF_CLOSABLE_TAGS;
 
 #[derive(Debug, Clone)]
 /// Either Text Contents or a [`HTMLElement`](HTMLElement)

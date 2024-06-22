@@ -1,4 +1,8 @@
+
+/*
+use std::option::Iter;
 use crate::rtml::html_elements::{HTMLElement, HTMLElementReference, HTMLEnum};
+use crate::whitespace;
 
 /// Some html tags are self-closing and do not absolutely need an ending Slash
 /// This is the case with `<br>`, for example (which can also be writted `<br/>`)
@@ -14,6 +18,8 @@ pub(crate) static SELF_CLOSABLE_TAGS: &[&str] = &[
 /// but more optimized
 static STERILE_TAGS: &[&str] = &["script"];
 
+
+
 #[derive(Debug)]
 pub enum ParserError {
     //TODO : Proper error handling
@@ -28,6 +34,9 @@ macro_rules! find_from {
     };
 }
 
+
+
+
 ///
 /// Parses a string of tokens representing a HTML page
 ///
@@ -38,10 +47,11 @@ macro_rules! find_from {
 /// ## Returns
 /// A Vector of HTMLEnums, representing the contents of the HTML page.
 pub fn parse<'a>(mut document: &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserError>{
-    parse_rec(document, None)
+    let (_, tokens) = parse_rec(document, None)?;
+    Ok(tokens)
 }
 
-pub fn parse_rec<'a>(mut document: &'a str, parent_name : Option<&str>) -> Result<Vec<HTMLEnum<'a>>, ParserError> {
+fn parse_rec<'a>(mut document: &'a str, parent_name : Option<&str>) -> Result<(&'a str, Vec<HTMLEnum<'a>>), ParserError> {
     //We start in regular data mode.
     //For now, what we see is text.
     //Let's try to find a tag
@@ -54,6 +64,53 @@ pub fn parse_rec<'a>(mut document: &'a str, parent_name : Option<&str>) -> Resul
     while offset < document.len() {
         //We found what might be a tag starter
         if let Some(index) = find_from!(document, offset, '<') {
+
+            //Check if it's a tag end
+            if matches!(document.get(index + 1 .. index + 2), Some("/")){
+                //Find up to where it matches
+
+                match document.get(index + 2 .. index + 3){
+                    None => { /* EXIT */ }
+                    Some(v) => {
+                        if matches!(v.bytes().nth(0).unwrap() as char, tag_name_pattern!()){
+                            //First character matches
+                            if let Some(x) = find_from!(document, index + 3, |x| !matches!(x, tag_name_pattern!())){
+
+                                if index > 0{
+                                    result.push(HTMLEnum::Text(&document[.. index]))
+                                }
+
+                                //Check name
+                                let ender_name = &document[index + 2 .. x];
+
+                                if x + 1 > document.len() {
+                                    document = &document[x + 1..];
+                                } else {
+                                    document = "";
+                                }
+
+                                if !parent_name.is_some(){
+                                    todo!("Extraneous closing tag");
+                                }
+
+                                if parent_name.unwrap() != ender_name{
+                                    todo!("Unmatched closing tag")
+                                }
+
+
+
+                                return Ok((document, result));
+                            }
+                            else{
+                                todo!("Unterminated closing tag");
+                            }
+
+                        }
+                    }
+                }
+
+            }
+
             //Check if its a comment
             if matches!(document.get(index + 1..index + 4), Some("!--")) {
                 //Comment tag
@@ -88,14 +145,20 @@ pub fn parse_rec<'a>(mut document: &'a str, parent_name : Option<&str>) -> Resul
                     continue; //Restart the process
                 }
             }
-            //Check if it's a DOCTYPE
+
+            //Process it as a regular tag
             else {
                 let mut name: Option<&str> = None;
 
+                //Extract the tag name
                 match document.get(index + 1..index + 9) {
                     Some(x) if x.to_lowercase() == "!doctype" => {
                         //Names are case-insensitive
                         name = Some("!doctype");
+
+                        if index != 0 {
+                            result.push(HTMLEnum::Text(&document[..index].trim()))
+                        }
 
                         document = &document[index + 9..]; //Cut off the title
                         offset = 0; //Reset the reading offset
@@ -109,7 +172,7 @@ pub fn parse_rec<'a>(mut document: &'a str, parent_name : Option<&str>) -> Resul
                         if find_from!(
                             document,
                             index + 1,
-                            |x| matches!(x, 'A'..='Z' | 'a'..='z' | '_')
+                            |x| matches!(x, tag_name_starter_pattern!())
                         ) == Some(index + 1)
                         {
                             //First character matches
@@ -118,22 +181,28 @@ pub fn parse_rec<'a>(mut document: &'a str, parent_name : Option<&str>) -> Resul
                             match find_from!(
                                 document,
                                 index + 2,
-                                |x| !matches!(x, 'A'..='Z' | 'a'..='z' | '_' | '-' | '0' ..= '9')
+                                |x| !matches!(x,tag_name_pattern!())
                             ) {
                                 Some(i) => {
+
+                                    if index != 0 {
+                                        result.push(HTMLEnum::Text(&document[..index].trim()))
+                                    }
+
                                     //Found a name end
                                     name = Some(&document[index + 1..i]); //Transfer the name
                                     document = &document[i..]; //Crop the tag start from the document
                                     offset = 0; //Reset the reading offset
                                 }
                                 None => {
-                                    todo!("UnterminatedTagName");
+                                    todo!("Unterminated Tag Name");
                                 }
                             }
                         }
                     }
                 }
 
+                //Just process it as a regular tag
                 if name.is_some() {
                     let (doc, tag_info) = parse_tag(document, name.unwrap())?;
                     document = doc;
@@ -144,6 +213,7 @@ pub fn parse_rec<'a>(mut document: &'a str, parent_name : Option<&str>) -> Resul
                     offset += 1;
                 }
             }
+
         } else {
             //No tag starter, this is only text
 
@@ -151,7 +221,7 @@ pub fn parse_rec<'a>(mut document: &'a str, parent_name : Option<&str>) -> Resul
 
             document = ""; //Flush document
 
-            return Ok(result);
+            return Ok((document, result));
         }
     }
 
@@ -162,13 +232,13 @@ pub fn parse_rec<'a>(mut document: &'a str, parent_name : Option<&str>) -> Resul
         document = ""; //Flush document
     }
 
-    return Ok(result);
+    return Ok((document, result));
 }
 
 ///Returns (rest of document, parsed element)
 fn parse_tag<'a>(
     mut document: &'a str,
-    name: &'a str,
+    name: &'a str
 ) -> Result<(&'a str, HTMLElementReference<'a>), ParserError> {
     enum Mode {
         None,
@@ -193,7 +263,8 @@ fn parse_tag<'a>(
     let sterile: bool = STERILE_TAGS.contains(&&*name.to_lowercase()); //Is the tag unable to have children (like script) ? (here for optimization)
 
     for (index, char) in document.char_indices() {
-        if html_encoding_from.is_some() {
+
+        if html_encoding_from.is_some() { //SUPPORT HTML-ENCODED chars like &lt, &gt, &12354
             //This goes above the regular checking loop.
 
             //Skip to the end of the HTML_encoding character
@@ -215,48 +286,15 @@ fn parse_tag<'a>(
 
                         document = &document[index + 1..];
 
-                        if self_closed {
-                            drop(res);
-                            return Ok((document, res_reference));
-                        } else {
-                            let end_tag = format!("</{}>", name);
-                            match document.find(&end_tag) {
-                                None => {
-                                    //No end found, close the tag and parse the children
-                                    //Doing this allows for unclosed tags in a document
-                                    // ex : <p> THIS IS A PARAGRAPH
-                                    // gets turned into <p> THIS IS A PARAGRAPH</p>
-
-                                    if sterile {
-                                        res.add_text(document);
-                                    } else {
-                                        //Parse the children
-                                        res.add_children(parse_rec(document, Some(res.name))?);
-                                    }
-
-                                    //Because the rest of the document has been parsed,
-                                    //the return document is always empty
-                                    drop(res);
-                                    return Ok(("", res_reference));
-                                }
-                                Some(index) => {
-                                    //We can only parse what's between here and the tag closure
-
-                                    let recdoc = &document[..index];
-
-                                    if sterile {
-                                        //GO faster and avoid parsing the contents of certain tags (like script)
-                                        res.add_text(recdoc);
-                                    } else {
-                                        //Parse the children
-                                        res.add_children(parse_rec(recdoc, Some(res.name))?);
-                                    }
-
-                                    drop(res);
-                                    return Ok((&document[index + end_tag.len()..], res_reference));
-                                }
-                            }
+                        if !self_closed { //Child of the current element
+                            let res_name = res.name;
+                            let (new_doc, tokens) = parse_rec(document, Some(res_name))?;
+                            res.add_children(tokens);
+                            document = new_doc;
                         }
+
+                        drop(res);
+                        return Ok((document, res_reference));
                     }
 
                     _ => {
@@ -304,7 +342,6 @@ fn parse_tag<'a>(
                 match char {
                     '>' => {
                         //Only self-closed elements don't look for children.
-
                         //Because it was not closed, we need to check the state of the machine
 
                         if let Mode::Alpha(x) = mode {
@@ -331,45 +368,15 @@ fn parse_tag<'a>(
 
                         document = &document[index + 1..];
 
-                        if self_closed {
-                            drop(res);
-                            return Ok((document, res_reference));
-                        } else {
-                            let end_tag = format!("</{}>", name);
-                            match document.find(&end_tag) {
-                                None => {
-                                    //No end found, close the tag and parse the children
-
-                                    if sterile {
-                                        res.add_text(document);
-                                    } else {
-                                        //Parse the children
-                                        res.add_children(parse_rec(document, Some(res.name))?);
-                                    }
-
-                                    //Because the rest of the document has been parsed,
-                                    //the return document is always empty
-                                    drop(res);
-                                    return Ok(("", res_reference));
-                                }
-                                Some(index) => {
-                                    //We can only parse what's between here and the tag closure
-
-                                    let recdoc = &document[..index];
-
-                                    if sterile {
-                                        //GO faster and avoid parsing the contents of certain tags (like script)
-                                        res.add_text(recdoc);
-                                    } else {
-                                        //Parse the children
-                                        res.add_children(parse_rec(recdoc, Some(res.name))?);
-                                    }
-
-                                    drop(res);
-                                    return Ok((&document[index + end_tag.len()..], res_reference));
-                                }
-                            }
+                        if !self_closed { //Child of the current element
+                            let res_name = res.name;
+                            let (new_doc, tokens) = parse_rec(document, Some(res_name))?;
+                            res.add_children(tokens);
+                            document = new_doc;
                         }
+
+                        drop(res);
+                        return Ok((document, res_reference));
                     }
 
                     '/' => {
@@ -498,3 +505,4 @@ fn parse_tag<'a>(
 
     todo!("Incorrect TAG syntax");
 }
+*/

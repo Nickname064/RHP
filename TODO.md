@@ -2,7 +2,7 @@
 
 ## [ ] Parser
 - [X] Get functional HTML parser
-- [ ] Fix bugs with parser consuming wrong tag ends
+- [X] Fix bugs with parser consuming wrong tag ends
 
 ## [ ] Custom elements
 - [X] Implement basic Custom Elements
