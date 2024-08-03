@@ -1,33 +1,37 @@
-use crate::rhp::process_document;
-use crate::rtml::document::HTMLDocument;
-use std::{fmt, fs, io};
-use std::fmt::Formatter;
-use std::fs::File;
-use std::io::Write;
-use crate::hqueries::{HCombinedQuery, HQuery};
-use crate::mdparse::mdparse::markdown_parse;
-use crate::rtml::html_elements::PrettyPrintable;
-use crate::rtml::reparse::{consume_attr_value, consume_attribute, consume_tag_name, consume_value, html_parse};
+use crate::parser::parse::parse_html;
+use std::fs;
+use std::iter::Peekable;
 
+mod dom;
+mod marsec;
+mod parser;
 
-mod hqueries;
-mod rhp;
-mod rtml;
-mod utility;
-mod mdparse;
+fn find_word<I>(source: &mut Peekable<I>, word: &str) -> Option<usize>
+where
+    I: Iterator<Item = (usize, char)> + Clone,
+{
+    let word_chars: Vec<char> = word.chars().collect();
+
+    while let Some(&(index, c)) = source.peek() {
+        if word_chars.iter().zip(source.clone()).all(|(x, (_, y))| *x == y){
+            return Some(index);
+        } source.next();
+    }
+
+    None // Word not found
+}
 
 fn main() {
-
     //println!("{:#?}", HQuery::from_str("dom.class#id.class2"));
     //println!("{:#?}", HCombinedQuery::from_str("div > dom > div div"));
 
+
     match fs::read_to_string(r#"C:\Users\wanth\Documents\GitHub\RHP\DEBUG.rhp"#) {
         Ok(str) => {
-
-
-            let tokens = html_parse(&str);
-            println!("{:#?}", tokens);
-
+            match parse_html(&str){
+                Ok(x) => { println!("{:#?}", x); }
+                Err(n) => { println!("{:#?}", n); }
+            }
             /*
                 let processed = process_document(tokens);
                 let document = HTMLDocument::from_tokens(processed);
@@ -42,20 +46,7 @@ fn main() {
         }
     }
 
-
-
     //let dbg_str = "# 1. test ```HELLO WORLD```";
     //println!("{:?}", markdown_parse(dbg_str));
 }
 
-#[cfg(test)]
-
-#[test]
-fn test_parse_1(){
-    assert!(html_parse("<div></div>").is_ok());
-}
-
-#[test]
-fn test_parse_incorrect(){
-    assert!(html_parse("<h2></div>").is_err());
-}

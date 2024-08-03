@@ -3,11 +3,15 @@
 ## [ ] Parser
 - [X] Get functional HTML parser
 - [X] Fix bugs with parser consuming wrong tag ends
+- [ ] Add doctypes and comments
+- [ ] Self-closable tags don't HAVE to self-close
+  - TIP : [ ] Rewrite parser to be iterative instead of recursive
 
 ## [ ] Custom elements
 - [X] Implement basic Custom Elements
+- [ ] Enforce a hyphen in every custom element
 - [X] Implement Recursive Custom Elements
-  - [X] Avoid infinite recursive algorithm
+  - [X] Avoid infinitely recursive custom elements
 - [X] Give elements easy access to their parents
 - [ ] Implement child selectors
   - [ ] Implement basic queries
@@ -19,7 +23,7 @@
 - [ ] Add include statement (import selectors and text contents)
   
 ## Dev QOL
-- [ ] Improve parser to add error handling
+- [X] Improve parser to add error handling
 - [ ] Write Linter and Language Server
   
 ## Versatility

@@ -1,11 +1,11 @@
-use super::html_elements::{HTMLElement, HTMLElementReference, HTMLEnum, PrettyPrintable};
+use super::html_elements::{HTMLNode, HTMLNodeRef, HTMLEnum, PrettyPrintable};
 use std::fmt::{Display, Formatter};
 
 /// A HTML Document.
 pub struct HTMLDocument<'a> {
-    doctype : Option<HTMLElementReference<'a>>,
-    head: HTMLElementReference<'a>,
-    body: HTMLElementReference<'a>,
+    doctype: Option<HTMLNodeRef<'a>>,
+    head: HTMLNodeRef<'a>,
+    body: HTMLNodeRef<'a>,
 }
 
 impl<'a> HTMLDocument<'a> {
@@ -13,8 +13,8 @@ impl<'a> HTMLDocument<'a> {
     /// correcting head elements not being in the head, and body elements not being in the body
     fn recursive_sort(
         elements: Vec<HTMLEnum<'a>>,
-        head: HTMLElementReference<'a>,
-        body: HTMLElementReference<'a>,
+        head: HTMLNodeRef<'a>,
+        body: HTMLNodeRef<'a>,
     ) {
         let head_nodes: &[&str] = &[
             //These nodes are only valid in the head
@@ -31,7 +31,7 @@ impl<'a> HTMLDocument<'a> {
                 HTMLEnum::Text(text) => {
                     body.borrow_mut().add_text(text);
                 }
-                HTMLEnum::Element(html_node) => {
+                HTMLEnum::Node(html_node) => {
                     //Figure out if its contents go to head or body
                     //Do the same to children
 
@@ -59,17 +59,19 @@ impl<'a> HTMLDocument<'a> {
     }
 
     pub fn from_tokens(mut tokens: Vec<HTMLEnum<'a>>) -> HTMLDocument<'a> {
-        let head = HTMLElement::new();
-        let body = HTMLElement::new();
+        let head = HTMLNode::new();
+        let body = HTMLNode::new();
 
-        let doctype : Option<HTMLElementReference>;
+        let doctype: Option<HTMLNodeRef>;
 
-        match tokens.first(){
-            Some(HTMLEnum::Element(html)) if html.borrow().name.to_lowercase() == "!doctype" => {
+        match tokens.first() {
+            Some(HTMLEnum::Node(html)) if html.borrow().name.to_lowercase() == "!doctype" => {
                 doctype = Some(html.clone());
                 tokens.remove(0);
             }
-            _ => { doctype = None; }
+            _ => {
+                doctype = None;
+            }
         }
 
         Self::recursive_sort(tokens, head.clone(), body.clone());
@@ -77,14 +79,17 @@ impl<'a> HTMLDocument<'a> {
         head.borrow_mut().name = "head";
         body.borrow_mut().name = "body";
 
-        HTMLDocument { doctype, head, body }
+        HTMLDocument {
+            doctype,
+            head,
+            body,
+        }
     }
 }
 
 impl Display for HTMLDocument<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-
-        if let Some(d) = &self.doctype{
+        if let Some(d) = &self.doctype {
             write!(f, "{}", d.borrow())?;
         }
 
@@ -93,12 +98,16 @@ impl Display for HTMLDocument<'_> {
     }
 }
 
-impl PrettyPrintable for HTMLDocument<'_>{
+impl PrettyPrintable for HTMLDocument<'_> {
     fn pretty_fmt_rec(&self, depth: usize) -> String {
         let mut buf = String::new();
 
-        if let Some(d) = &self.doctype{
-            buf += &format!("{}{}\n", "\t".repeat(depth), d.borrow().pretty_fmt_rec(depth));
+        if let Some(d) = &self.doctype {
+            buf += &format!(
+                "{}{}\n",
+                "\t".repeat(depth),
+                d.borrow().pretty_fmt_rec(depth)
+            );
         }
 
         buf += &self.head.borrow().pretty_fmt_rec(depth);

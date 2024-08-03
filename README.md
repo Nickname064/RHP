@@ -1,5 +1,5 @@
-# RHP
-A simple HTML preprocessor
+# Marsec
+A simple HTML / markdown preprocessor
 
 ## Features
 
@@ -8,13 +8,20 @@ A simple HTML preprocessor
 Custom tag declarations are done as follows.
 
 ```html
-<define myCustomTag>
+<define-tag myCustomTag>
     ...
-</define>
+</define-tag>
 ```
 
 Note : This declaration has to be done at the top level.
 Any declaration not done at the top level is considered invalid and will not be taken into consideration
+
+Also, the first attribute of the tag definition HAS TO BE THE TAG NAME.
+The tag name should not have any value, otherwise it will be considered invalid.
+
+Ex: `<define-tag myCustomTag="so cool"></define-tag>` is INVALID.
+It is also advised to use hyphens(-) in your custom tag names, so that they stay compliant with the HTML standard.
+This is just advice, and will not be enforced by the compiler
 
 And any invocation of `myCustomTag` will be replaced by the contents specified inside the define block.
 Now let's see in more detail what we can do with it.
@@ -22,7 +29,7 @@ Now let's see in more detail what we can do with it.
 #### Children
 
 Children can be attached inside a custom tag.
-To do so, simply invoke the `<children/>` tag inside a custom element declaration
+To do so, simply invoke the `<insert-children/>` tag inside a custom element declaration
 
 Imagine you need to format elements in a specific boilerplate-y way.
 You could use custom elements to simplify the syntax
@@ -67,7 +74,52 @@ Runtime pseudo-classes, such as `::hover()` or `::active()` are not, and will ne
 
 Standars pseudo classes, such as ::last(), ::nth(n) or ::not(), are not supported yet.
 
-#### Classes and attributes
+#### Mux
+
+##### Description
+
+The `de-mux` tag enables you to paste a pattern for each child fed to the custom tag.
+Imagine the following
+```html
+<define tagname=replace_by_div>
+    <de-mux><div></div></de-mux>
+</define>
+```
+
+Invoking it with
+```html
+<replace_by_div>
+    <span>A</span>
+    <span>B</span>
+    <span>C</span>
+</replace_by_div>
+```
+
+Would yield
+
+```html
+<div></div>
+<div></div>
+<div></div>
+```
+
+##### Mux select
+
+Just like the `children` tag, the `mux` tag can be combined with a selector in order to only react to some children.
+
+```html
+<define tagname="img_per_div">
+    <mux select="div"><img src="https://picsum.photos"></mux>
+</define>
+```
+
+The custom element above will paste one image for each div you put in, and will ignore all other children.
+
+
+
+
+
+#### Attributes
 
 Any attributes given to your custom tag will be propagated inside of it.
 This works for classes, ids, etc.
