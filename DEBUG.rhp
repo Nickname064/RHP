@@ -39,6 +39,13 @@
         async
         type="module"
         src="chrome://global/content/elements/moz-toggle.mjs"
-></script>
+>
+
+    function test(){
+
+    }
+
+</script>
 </body>
 </html>
+

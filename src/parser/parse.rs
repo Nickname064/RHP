@@ -482,6 +482,7 @@ pub fn parse_html<'a>(document : &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserErr
                         if tag_start != text_start {
                             last_layer.push(HTMLEnum::Text(&document[text_start..tag_start]));
                         }
+                        text_used = true;
 
                         let (_source, from, to) = consume_tag_name(source)?;
                         source = _source;
@@ -540,8 +541,8 @@ pub fn parse_html<'a>(document : &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserErr
 
                         //DOCTYPES and COMMENTS
                         source.next(); //Skip the !
-                        let doc = "!doctype";
-                        let com = "!--";
+                        let doc = "doctype";
+                        let com = "--";
 
                         if com.chars().zip(source.clone()).all(|(x, (_, y))| x == y){
                             //COMMENT
@@ -594,7 +595,9 @@ pub fn parse_html<'a>(document : &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserErr
                                     }
                                 }
                             }
-
+                        }
+                        else{
+                            text_used = false;
                         }
                     }
                     _ => {
