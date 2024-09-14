@@ -1,5 +1,6 @@
-use crate::dom::hqueries::HQueryErr::DuplicateId;
-use crate::dom::html_elements::{HTMLNode};
+use crate::hqueries;
+use crate::hqueries::HQueryErr::DuplicateId;
+use crate::html_elements::HTMLNode;
 
 ///A representation of standard dom queries
 #[derive(Debug)]
@@ -18,7 +19,7 @@ pub struct HQuery<'a> {
 }
 
 #[derive(Debug)]
-pub enum HCombinedQuery<'a> {
+pub enum HCombinedQuery<'a> { //TODO: Rework representation
     Simple(HQuery<'a>),
     Or(Box<(HCombinedQuery<'a>, HCombinedQuery<'a>)>),
     DirectChild(Box<(HCombinedQuery<'a>, HCombinedQuery<'a>)>),
@@ -150,4 +151,5 @@ impl<'a> HQuery<'_> {
         true
     }
 }
+
 

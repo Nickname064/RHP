@@ -1,15 +1,8 @@
-use crate::dom::html_elements::{HTMLNode, HTMLNodeRef, HTMLEnum};
 use std::iter::Peekable;
-use crate::parser::errors::{ParserError, ParserErrorType};
-use crate::parser::errors::ParserErrorType::{*};
+use crate::errors::{ParserError, ParserErrorType};
+use crate::errors::ParserErrorType::{*};
 
-/// Some html tags are self-closing and do not absolutely need an ending Slash
-/// This is the case with `<br>`, for example (which can also be written `<br/>`)
-/// These elements cannot have children.
-pub(crate) static SELF_CLOSED: &[&str] = &[
-    "are", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source",
-    "track", "wbr", "command", "keygen", "menuitem", "frame", "!doctype",
-];
+use dom::html_elements::{*};
 
 //What characters can start a tag name
 macro_rules! tag_name_starter_pattern {
@@ -326,7 +319,7 @@ fn fold<'a>(layer_stack : &mut Vec<(Vec<HTMLEnum<'a>>, HTMLNodeRef<'a>)>, mut la
     match layer_stack.pop(){
         None => Err(last_layer),
         Some((mut contents, tag)) => {
-            if !SELF_CLOSED.contains(&&*tag.borrow().name().to_lowercase()) {
+            if !__SELF_CLOSED.contains(&&*tag.borrow().name().to_lowercase()) {
                 let mut tagborrow = tag.borrow_mut();
                 tagborrow.add_children(last_layer);
                 drop(tagborrow);
@@ -382,7 +375,7 @@ pub fn parse_html<'a>(document : &'a str) -> Result<Vec<HTMLEnum<'a>>, ParserErr
 
     let mut doctype_attributes: Vec<(&'a str, Option<&'a str>)> = vec![];
 
-    let is_self_closable = |name : &str| SELF_CLOSED.contains(&&*name.to_lowercase());
+    let is_self_closable = |name : &str| __SELF_CLOSED.contains(&&*name.to_lowercase());
     let mut text_used = true;
     let mut text_start : usize = 0; //dummy default value. Is instantly overwritten on line 417
 

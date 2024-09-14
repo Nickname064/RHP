@@ -2,7 +2,13 @@ use std::cell::RefCell;
 use std::fmt::{Display, Formatter};
 use std::rc::{Rc, Weak};
 
-use crate::parser::parse::SELF_CLOSED;
+/// Some html tags are self-closing and do not absolutely need an ending Slash
+/// This is the case with `<br>`, for example (which can also be written `<br/>`)
+/// These elements cannot have children.
+pub const __SELF_CLOSED: &[&str] = &[
+    "are", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source",
+    "track", "wbr", "command", "keygen", "menuitem", "frame", "!doctype",
+];
 
 #[derive(Debug, Clone)]
 /// Either Text Contents or a [`HTMLElement`](HTMLNode)
@@ -25,7 +31,7 @@ pub type HTMLNodeRef<'a> = Rc<RefCell<HTMLNode<'a>>>;
 pub struct HTMLNode<'a> {
     ///The name of this tag.
     /// Ex: for a ```<div></div>```, `name` = "div"
-    pub(crate) name: &'a str,
+    pub name: &'a str,
 
     ///This tag's attributes
     pub(crate) attributes: Vec<(&'a str, Option<&'a str>)>,
@@ -40,7 +46,8 @@ pub struct HTMLNode<'a> {
     weak_self: HTMLNodeWeakRef<'a>,
 }
 
-impl<'a> HTMLNode<'a> {
+impl<'a> HTMLNode<'a>
+{
     //Create a reference to a new element
     pub fn new() -> HTMLNodeRef<'a> {
         let elem = Rc::new(RefCell::new(HTMLNode {
@@ -65,6 +72,8 @@ impl<'a> HTMLNode<'a> {
         self.weak_self.clone()
     }
 
+    /// Creates a copy of this node, with the same name and attributes.
+    /// Children and parents are not copied.
     pub fn duplicate(&self) -> HTMLNodeRef<'a> {
         let dup = Self::new();
 
@@ -75,6 +84,23 @@ impl<'a> HTMLNode<'a> {
         //Cloning the parent reference would make no sense, as the parent wouldn't be pointing to a newly created element
 
         dup
+    }
+
+    /// Creates a copy of this node, with the same name, attributes, and (copy of its) children
+    /// Its parent is not copied, and as such, the duplicate is an orphan
+    pub fn duplicate_family(&self) -> HTMLNodeRef<'a> {
+        let replicant = self.duplicate();
+        let mut replicant_borrow = replicant.borrow_mut();
+
+        for child in &self.children {
+            match child {
+                HTMLEnum::Node(noderef) => { replicant_borrow.add_child(noderef.borrow().duplicate_family()); }
+                other => { replicant_borrow.add_children(vec![other.clone()]); }
+            }
+        }
+
+        drop(replicant_borrow);
+        replicant
     }
 
     /// Returns a strong reference to this element's parent
@@ -132,7 +158,7 @@ impl<'a> HTMLNode<'a> {
                     _ => false,
                 }) {
                     None => {
-                        panic!("A child doesn't appear in its parent children");
+                        panic!("A child has been disowned. This should not happen");
                     }
                     Some(index) => {
                         parent_borrow.children.remove(index);
@@ -169,7 +195,7 @@ impl<'a> HTMLNode<'a> {
         &self.children
     }
     pub fn self_closing(&self) -> bool {
-        SELF_CLOSED
+        __SELF_CLOSED
             .iter()
             .find(|&&x| x == self.name)
             .is_some()
