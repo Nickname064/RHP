@@ -1,8 +1,7 @@
-
 #[derive(Debug)]
 pub struct ParserError {
-    pub(crate) char: usize,
-    pub(crate) error_type: ParserErrorType,
+    pub char: usize,
+    pub error_type: ParserErrorType,
 }
 
 #[derive(Debug)]

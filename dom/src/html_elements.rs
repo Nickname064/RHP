@@ -12,46 +12,45 @@ pub const __SELF_CLOSED: &[&str] = &[
 
 #[derive(Debug, Clone)]
 /// Either Text Contents or a [`HTMLElement`](HTMLNode)
-pub enum HTMLEnum<'a> {
-    Text(&'a str),
-    Node(HTMLNodeRef<'a>),
-    Comment(&'a str),
+pub enum HTMLEnum {
+    Text(String),
+    Node(HTMLNodeRef),
+    Comment(String),
 }
 
 /// A Weak reference to a HTMLElement.
 /// Used by children to reference their parents, without actually owning them
-pub type HTMLNodeWeakRef<'a> = Weak<RefCell<HTMLNode<'a>>>;
+pub type HTMLNodeWeakRef = Weak<RefCell<HTMLNode>>;
 
 /// A Strong reference to a HTMLElement.
 /// Used by parents to reference their children.
-pub type HTMLNodeRef<'a> = Rc<RefCell<HTMLNode<'a>>>;
+pub type HTMLNodeRef = Rc<RefCell<HTMLNode>>;
 
 #[derive(Debug, Clone)]
 /// A HTML tag.
-pub struct HTMLNode<'a> {
+pub struct HTMLNode {
     ///The name of this tag.
     /// Ex: for a ```<div></div>```, `name` = "div"
-    pub name: &'a str,
+    pub name: String,
 
     ///This tag's attributes
-    pub(crate) attributes: Vec<(&'a str, Option<&'a str>)>,
+    pub(crate) attributes: Vec<(String, Option<String>)>,
 
     ///This tag's contents, whether they be tags or text.
-    pub(crate) children: Vec<HTMLEnum<'a>>,
+    pub(crate) children: Vec<HTMLEnum>,
 
     ///This tag's parent (as a weak reference)
-    pub(crate) parent: Option<HTMLNodeWeakRef<'a>>,
+    pub(crate) parent: Option<HTMLNodeWeakRef>,
 
     //A weak reference to the self, to pass around
-    weak_self: HTMLNodeWeakRef<'a>,
+    weak_self: HTMLNodeWeakRef,
 }
 
-impl<'a> HTMLNode<'a>
-{
+impl HTMLNode {
     //Create a reference to a new element
-    pub fn new() -> HTMLNodeRef<'a> {
+    pub fn new() -> HTMLNodeRef {
         let elem = Rc::new(RefCell::new(HTMLNode {
-            name: "",
+            name: String::default(),
             attributes: vec![],
             children: vec![],
             parent: None,
@@ -63,22 +62,22 @@ impl<'a> HTMLNode<'a>
     }
 
     /// Gives a reference to this element
-    pub fn reference(&self) -> Option<HTMLNodeRef<'a>> {
+    pub fn reference(&self) -> Option<HTMLNodeRef> {
         self.weak_self.upgrade()
     }
 
     /// Gives a weak reference to this element
-    pub fn weak_reference(&self) -> HTMLNodeWeakRef<'a> {
+    pub fn weak_reference(&self) -> HTMLNodeWeakRef {
         self.weak_self.clone()
     }
 
     /// Creates a copy of this node, with the same name and attributes.
     /// Children and parents are not copied.
-    pub fn duplicate(&self) -> HTMLNodeRef<'a> {
+    pub fn duplicate(&self) -> HTMLNodeRef {
         let dup = Self::new();
 
         let mut dup_borrow = dup.borrow_mut();
-        dup_borrow.name = self.name;
+        dup_borrow.name = self.name.clone();
         dup_borrow.attributes = self.attributes.clone();
         drop(dup_borrow);
         //Cloning the parent reference would make no sense, as the parent wouldn't be pointing to a newly created element
@@ -88,14 +87,18 @@ impl<'a> HTMLNode<'a>
 
     /// Creates a copy of this node, with the same name, attributes, and (copy of its) children
     /// Its parent is not copied, and as such, the duplicate is an orphan
-    pub fn duplicate_family(&self) -> HTMLNodeRef<'a> {
+    pub fn duplicate_family(&self) -> HTMLNodeRef {
         let replicant = self.duplicate();
         let mut replicant_borrow = replicant.borrow_mut();
 
         for child in &self.children {
             match child {
-                HTMLEnum::Node(noderef) => { replicant_borrow.add_child(noderef.borrow().duplicate_family()); }
-                other => { replicant_borrow.add_children(vec![other.clone()]); }
+                HTMLEnum::Node(noderef) => {
+                    replicant_borrow.add_child(noderef.borrow().duplicate_family());
+                }
+                other => {
+                    replicant_borrow.add_children(vec![other.clone()]);
+                }
             }
         }
 
@@ -104,7 +107,7 @@ impl<'a> HTMLNode<'a>
     }
 
     /// Returns a strong reference to this element's parent
-    pub fn parent(&self) -> Option<HTMLNodeRef<'a>> {
+    pub fn parent(&self) -> Option<HTMLNodeRef> {
         match &self.parent {
             None => None,
             Some(parent) => Weak::upgrade(&parent),
@@ -112,7 +115,7 @@ impl<'a> HTMLNode<'a>
     }
 
     //Edit the thing
-    pub fn attribute(&mut self, attribute: &'a str, value: Option<&'a str>) -> &HTMLNode<'a> {
+    pub fn attribute(&mut self, attribute: String, value: Option<String>) -> &HTMLNode {
         //Attributes are only meant to be added / modified, not removed
 
         if let Some(index) = self
@@ -127,19 +130,19 @@ impl<'a> HTMLNode<'a>
         }
         self
     }
-    pub fn add_child(&mut self, child: HTMLNodeRef<'a>) -> &mut Self {
+    pub fn add_child(&mut self, child: HTMLNodeRef) -> &mut Self {
         child.borrow_mut().orphanize();
         child.borrow_mut().parent = Some(self.weak_self.clone());
         self.children.push(HTMLEnum::Node(child));
         self
     }
-    pub fn add_children(&mut self, children: Vec<HTMLEnum<'a>>) -> &mut Self {
+    pub fn add_children(&mut self, children: Vec<HTMLEnum>) -> &mut Self {
         for child in children {
             self.children.push(child);
         }
         self
     }
-    pub fn add_text<'x>(&'x mut self, text: &'a str) -> &'x Self {
+    pub fn add_text<'x>(&'x mut self, text: String) -> &'x Self {
         self.children.push(HTMLEnum::Text(text));
         self
     }
@@ -179,30 +182,27 @@ impl<'a> HTMLNode<'a>
     /// If the attribute doesnt appear, the result is None
     /// If the attribute appears with no value, the result is Some(None)
     /// If the attribute appears with a value, the result is Some(value)
-    pub fn get_attribute(&self, name: &str) -> Option<Option<&str>> {
+    pub fn get_attribute(&self, name: &str) -> Option<Option<String>> {
         match self
             .attributes
             .iter()
             .find(|(key, _attribute)| key.to_string() == name.to_string())
         {
-            Some((_key, val)) => return Some(*val),
+            Some((_key, val)) => return Some(val.clone()),
             None => {
                 return None;
             }
         }
     }
-    pub fn children(&self) -> &Vec<HTMLEnum<'a>> {
+    pub fn children(&self) -> &Vec<HTMLEnum> {
         &self.children
     }
     pub fn self_closing(&self) -> bool {
-        __SELF_CLOSED
-            .iter()
-            .find(|&&x| x == self.name)
-            .is_some()
+        __SELF_CLOSED.iter().find(|&&x| x == self.name).is_some()
     }
 
     // Returns the chain of parents of this node, starting from the closest
-    pub fn parent_chain(&self) -> Vec<HTMLNodeRef<'a>> {
+    pub fn parent_chain(&self) -> Vec<HTMLNodeRef> {
         let mut result = vec![];
 
         let mut x: HTMLNodeRef;
@@ -230,7 +230,7 @@ impl<'a> HTMLNode<'a>
 
     // Returns the chain of HTMLElement children of this node, in a breadth-first order
     // Useful for quickly looking through nodes
-    pub fn rec_html_children(&self) -> Vec<HTMLNodeRef<'a>> {
+    pub fn rec_html_children(&self) -> Vec<HTMLNodeRef> {
         let mut result = vec![];
 
         for child in &self.children {
@@ -247,7 +247,7 @@ impl<'a> HTMLNode<'a>
     }
 }
 
-impl HTMLEnum<'_> {
+impl HTMLEnum {
     fn fmt(&self, f: &mut Formatter<'_>, _rec_level: usize) -> std::fmt::Result {
         match self {
             HTMLEnum::Text(str) => {
@@ -270,7 +270,7 @@ pub trait PrettyPrintable {
     fn pretty_fmt_rec(&self, depth: usize) -> String;
 }
 
-impl PrettyPrintable for HTMLEnum<'_> {
+impl PrettyPrintable for HTMLEnum {
     fn pretty_fmt_rec(&self, depth: usize) -> String {
         let mut buf = String::new();
 
@@ -289,7 +289,7 @@ impl PrettyPrintable for HTMLEnum<'_> {
         buf
     }
 }
-impl PrettyPrintable for HTMLNode<'_> {
+impl PrettyPrintable for HTMLNode {
     fn pretty_fmt_rec(&self, depth: usize) -> String {
         let mut buf = String::new();
 
@@ -297,7 +297,7 @@ impl PrettyPrintable for HTMLNode<'_> {
         buf += &format!("<{}", self.name);
 
         for (attr, val) in &self.attributes {
-            buf += &format!("{}={}", attr, val.unwrap_or(r#""""#));
+            buf += &format!("{}={}", attr, val.clone().unwrap_or(String::from(r#""""#)))
         }
 
         if self.self_closing() {
@@ -322,7 +322,7 @@ impl PrettyPrintable for HTMLNode<'_> {
     }
 }
 
-impl Display for HTMLEnum<'_> {
+impl Display for HTMLEnum {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             HTMLEnum::Text(str) => {
@@ -337,12 +337,17 @@ impl Display for HTMLEnum<'_> {
         }
     }
 }
-impl Display for HTMLNode<'_> {
+impl Display for HTMLNode {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "<{}", self.name)?;
 
         for (attribute, value) in &self.attributes {
-            write!(f, " {}=\"{}\"", attribute, value.unwrap_or(r#""""#))?;
+            write!(
+                f,
+                " {}=\"{}\"",
+                attribute,
+                value.clone().unwrap_or(r#""""#.to_string())
+            )?;
         }
 
         if self.self_closing() {

@@ -1,29 +1,29 @@
-use crate::hqueries;
 use crate::hqueries::HQueryErr::DuplicateId;
 use crate::html_elements::HTMLNode;
 
 ///A representation of standard dom queries
 #[derive(Debug)]
-pub struct HQuery<'a> {
+pub struct HQuery {
     ///Tag name of the object
-    name: Option<&'a str>,
+    name: Option<String>,
 
     ///Classes the object must have
-    class: Vec<&'a str>,
+    class: Vec<String>,
 
     /// IDentifier of the object
-    id: Option<&'a str>,
+    id: Option<String>,
 
     /// Attribute-value pairs
-    attributes: Vec<(&'a str, Option<&'a str>)>,
+    attributes: Vec<(String, Option<String>)>,
 }
 
 #[derive(Debug)]
-pub enum HCombinedQuery<'a> { //TODO: Rework representation
-    Simple(HQuery<'a>),
-    Or(Box<(HCombinedQuery<'a>, HCombinedQuery<'a>)>),
-    DirectChild(Box<(HCombinedQuery<'a>, HCombinedQuery<'a>)>),
-    IndirectChild(Box<(HCombinedQuery<'a>, HCombinedQuery<'a>)>),
+pub enum HCombinedQuery {
+    //TODO: Rework representation
+    Simple(HQuery),
+    Or(Box<(HCombinedQuery, HCombinedQuery)>),
+    DirectChild(Box<(HCombinedQuery, HCombinedQuery)>),
+    IndirectChild(Box<(HCombinedQuery, HCombinedQuery)>),
 }
 
 #[derive(Debug)]
@@ -32,8 +32,8 @@ pub enum HQueryErr {
 }
 
 /// A simplified DOM query, implementing classes, tag names, identifiers, and attribute-value pairs
-impl<'a> HQuery<'_> {
-    pub fn from_str(mut source: &'a str) -> Result<HQuery, HQueryErr> {
+impl HQuery {
+    pub fn from_str(mut source: String) -> Result<HQuery, HQueryErr> {
         // NAME#ID.CLASS[attr=value]
 
         //Special chars : #, ., [
@@ -51,8 +51,8 @@ impl<'a> HQuery<'_> {
         if let Some(index) = source.find(|x| _special_chars.contains(&x)) {
             if index != 0 {
                 //Extract name
-                _result.name = Some(&source[..index]);
-                source = &source[index..];
+                _result.name = Some(String::from(&source[..index]));
+                source = String::from(&source[index..]);
             }
         } else {
             return Ok(_result);
@@ -61,7 +61,7 @@ impl<'a> HQuery<'_> {
         loop {
             let letter = source.chars().nth(0);
             if source.len() > 0 {
-                source = &source[1..]
+                source = String::from(&source[1..]);
             };
 
             //While source.len() > 0 !TRUST
@@ -78,8 +78,8 @@ impl<'a> HQuery<'_> {
                         .chars()
                         .position(|x: char| _special_chars.contains(&x))
                         .unwrap_or(source.len());
-                    _result.class.push(&source[..index]);
-                    source = &source[index..];
+                    _result.class.push(String::from(&source[..index]));
+                    source = String::from(&source[index..]);
                 }
                 Some('#') =>
                 /*IDENTIFIER*/
@@ -93,8 +93,8 @@ impl<'a> HQuery<'_> {
                         return Err(DuplicateId);
                     }
 
-                    _result.id = Some(&source[..index]);
-                    source = &source[index..];
+                    _result.id = Some(String::from(&source[..index]));
+                    source = String::from(&source[index..]);
                 }
                 Some('[') =>
                 /*ATTR-VALUE*/
@@ -113,43 +113,7 @@ impl<'a> HQuery<'_> {
         Ok(_result)
     }
 
-    pub fn matches(&self, html_node: &HTMLNode<'a>) -> bool {
-        match self.name {
-            Some(n) if n != html_node.name => {
-                return false;
-            }
-            _ => {}
-        }
-
-        let split_class: Vec<&str> = html_node
-            .get_attribute("class")
-            .unwrap_or(Some(""))
-            .unwrap_or("")
-            .split(" ")
-            .collect();
-
-        for class in &self.class {
-            if !split_class.contains(&class) {
-                return false;
-            }
-        }
-
-        match self.id {
-            Some(id) => { return html_node.get_attribute("id") == Some(Some(id)); }
-            None => {}
-        }
-
-        for (attribute, maybe_value) in &self.attributes{
-            let nodeval =  html_node.get_attribute(attribute);
-
-            match maybe_value{
-                None => { if nodeval.is_none() { return false; } }
-                Some(value) => { if nodeval.is_none() || nodeval.unwrap() != Some(value) { return false; } }
-            }
-        }
-
-        true
+    pub fn matches(&self, html_node: &HTMLNode) -> bool {
+        todo!("Matching")
     }
 }
-
-

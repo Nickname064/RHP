@@ -1,21 +1,17 @@
-use super::html_elements::{HTMLNode, HTMLNodeRef, HTMLEnum, PrettyPrintable};
+use super::html_elements::{HTMLEnum, HTMLNode, HTMLNodeRef, PrettyPrintable};
 use std::fmt::{Display, Formatter};
 
 /// A HTML Document.
-pub struct HTMLDocument<'a> {
-    doctype: Option<HTMLNodeRef<'a>>,
-    head: HTMLNodeRef<'a>,
-    body: HTMLNodeRef<'a>,
+pub struct HTMLDocument {
+    doctype: Option<HTMLNodeRef>,
+    head: HTMLNodeRef,
+    body: HTMLNodeRef,
 }
 
-impl<'a> HTMLDocument<'a> {
+impl HTMLDocument {
     /// Parses a stream of standard HTML Tokens, and creates a fixed document from it,
     /// correcting head elements not being in the head, and body elements not being in the body
-    fn recursive_sort(
-        elements: Vec<HTMLEnum<'a>>,
-        head: HTMLNodeRef<'a>,
-        body: HTMLNodeRef<'a>,
-    ) {
+    fn recursive_sort(elements: Vec<HTMLEnum>, head: HTMLNodeRef, body: HTMLNodeRef) {
         let head_nodes: &[&str] = &[
             //These nodes are only valid in the head
             "title", "base", "link", "meta", "style", "script", "noscript", "template", "object",
@@ -58,7 +54,7 @@ impl<'a> HTMLDocument<'a> {
         }
     }
 
-    pub fn from_tokens(mut tokens: Vec<HTMLEnum<'a>>) -> HTMLDocument<'a> {
+    pub fn from_tokens(mut tokens: Vec<HTMLEnum>) -> HTMLDocument {
         let head = HTMLNode::new();
         let body = HTMLNode::new();
 
@@ -76,8 +72,8 @@ impl<'a> HTMLDocument<'a> {
 
         Self::recursive_sort(tokens, head.clone(), body.clone());
 
-        head.borrow_mut().name = "head";
-        body.borrow_mut().name = "body";
+        head.borrow_mut().name = "head".to_string();
+        body.borrow_mut().name = "body".to_string();
 
         HTMLDocument {
             doctype,
@@ -87,8 +83,8 @@ impl<'a> HTMLDocument<'a> {
     }
 }
 
-impl Display for HTMLDocument<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl Display for HTMLDocument {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         if let Some(d) = &self.doctype {
             write!(f, "{}", d.borrow())?;
         }
@@ -98,7 +94,7 @@ impl Display for HTMLDocument<'_> {
     }
 }
 
-impl PrettyPrintable for HTMLDocument<'_> {
+impl PrettyPrintable for HTMLDocument {
     fn pretty_fmt_rec(&self, depth: usize) -> String {
         let mut buf = String::new();
 
