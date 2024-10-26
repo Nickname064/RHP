@@ -29,9 +29,9 @@ Now let's see in more detail what we can do with it.
 #### Children
 
 Children can be attached inside a custom tag.
-To do so, simply invoke the `<insert-children/>` tag inside a custom element declaration
+To do so, simply invoke the `<children/>` tag inside a custom element declaration
 
-Imagine you need to format elements in a specific boilerplate-y way.
+Imagine you need to format elements in a specific boilerplate-y way for any reason (style for example).
 You could use custom elements to simplify the syntax
 
 ```html
@@ -54,10 +54,10 @@ We've got you covered
 ```html
 <define tagname="example">
     <div>HERE ARE PART OF THE CHILDREN
-        <children rhp-select="h1.selector"/>
+        <children filter="h1.selector"/>
     </div>
     <div>
-        <children rhp-select="h2.selector2"/>
+        <children filter="h2.selector2"/>
     </div>
 </define>
 
@@ -72,7 +72,7 @@ They are composed of `tagnames`, `.classes`, `#ids`.
 Runtime pseudo-classes, such as `::hover()` or `::active()` are not, and will never be accepted. 
 (This is a PREprocessor, remember ?)
 
-Standars pseudo classes, such as ::last(), ::nth(n) or ::not(), are not supported yet.
+Standards pseudo classes, such as ::last(), ::nth(n) or ::not(), are not supported yet.
 
 #### Mux
 

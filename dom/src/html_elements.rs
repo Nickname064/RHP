@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::rc::{Rc, Weak};
 
@@ -34,7 +35,7 @@ pub struct HTMLNode {
     pub name: String,
 
     ///This tag's attributes
-    pub(crate) attributes: Vec<(String, Option<String>)>,
+    pub(crate) attributes: HashMap<String, Option<String>>,
 
     ///This tag's contents, whether they be tags or text.
     pub(crate) children: Vec<HTMLEnum>,
@@ -51,7 +52,7 @@ impl HTMLNode {
     pub fn new() -> HTMLNodeRef {
         let elem = Rc::new(RefCell::new(HTMLNode {
             name: String::default(),
-            attributes: vec![],
+            attributes: HashMap::default(),
             children: vec![],
             parent: None,
             weak_self: Default::default(),
@@ -117,17 +118,7 @@ impl HTMLNode {
     //Edit the thing
     pub fn attribute(&mut self, attribute: String, value: Option<String>) -> &HTMLNode {
         //Attributes are only meant to be added / modified, not removed
-
-        if let Some(index) = self
-            .attributes
-            .iter()
-            .position(|(name, _)| *name == attribute)
-        {
-            self.attributes[index] = (attribute, value);
-        } else {
-            //TODO : Sort insertion
-            self.attributes.push((attribute, value));
-        }
+        self.attributes.insert(attribute, value);
         self
     }
     pub fn add_child(&mut self, child: HTMLNodeRef) -> &mut Self {
@@ -260,14 +251,20 @@ impl PrettyPrintable for HTMLEnum {
 
         match &self {
             HTMLEnum::Text(t) => {
-                buf += &format!("{}{}", "\t".repeat(depth), t);
+                buf += &format!(
+                    "{}",
+                    t.lines()
+                        .map(|x| format!("{}{}\n", "\t".repeat(depth), &x))
+                        .collect::<Vec<String>>()
+                        .join("\n")
+                );
             }
             HTMLEnum::Node(elem) => {
                 buf += &elem.borrow().pretty_fmt_rec(depth);
             }
             HTMLEnum::Comment(t) => {
                 buf += &"\t".repeat(depth);
-                buf += &format!("<!--{}-->", t);
+                buf += &format!("<!--{}-->\n", t);
             }
         }
         buf
@@ -314,7 +311,7 @@ impl Display for HTMLEnum {
                 write!(f, "{}", str)
             }
             HTMLEnum::Node(elem) => {
-                write!(f, "{}", elem.borrow())
+                write!(f, "{}", elem.borrow().pretty_fmt())
             }
             HTMLEnum::Comment(str) => {
                 write!(f, "<!--{}-->\n", str)

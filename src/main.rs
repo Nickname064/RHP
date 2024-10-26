@@ -1,3 +1,4 @@
+use dom::html_elements::PrettyPrintable;
 use parser::parse::parse_html;
 use std::fs;
 
@@ -7,7 +8,7 @@ fn main() {
             Ok(str) => match parse_html(&str) {
                 Ok(x) => {
                     for elem in x {
-                        println!("{}", elem);
+                        println!("{}", elem.pretty_fmt());
                     }
                 }
                 Err(n) => {

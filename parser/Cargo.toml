@@ -3,5 +3,10 @@ name = "parser"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = []
+query_parse = []
+all = ["query_parse"]
+
 [dependencies]
 dom = { path = "../dom"}

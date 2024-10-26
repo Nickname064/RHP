@@ -14,11 +14,11 @@
   - [X] Avoid infinitely recursive custom elements
 - [X] Give elements easy access to their parents
 - [ ] Implement child selectors
-  - [ ] Implement basic queries
-    - [ ] Implement attr-value queries
+  - [X] Implement basic queries
+    - [X] Implement attr-value queries
   - [X] Implement env queries (check parent)
 
-## Language
+## Language (Marsec)
 - [ ] Add import statement (only import custom selectors)
 - [ ] Add include statement (import selectors and text contents)
   

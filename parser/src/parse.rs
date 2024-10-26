@@ -5,6 +5,7 @@ use std::iter::Peekable;
 use dom::html_elements::*;
 
 //What characters can start a tag name
+#[macro_export]
 macro_rules! tag_name_starter_pattern {
     () => {
         'A'..='Z' | 'a'..='z' | '_'
@@ -12,46 +13,55 @@ macro_rules! tag_name_starter_pattern {
 }
 
 //What characters can be used inside a tag name (except first character)
+#[macro_export]
 macro_rules! tag_name_pattern {
     () => {
         'A'..='Z' | 'a'..='z' | '_' | '-' | '0' ..= '9'
     };
 }
 
+#[macro_export]
 macro_rules! arg_name_starter_pattern {
     () => { 'A' ..= 'Z' | 'a' ..= 'z' };
 }
 
+#[macro_export]
 macro_rules! arg_name_pattern {
     () => { 'A' ..= 'Z' | 'a' ..= 'z' | '0' ..= '9' | '-' | '_' | ':' | '.' };
 }
 
+#[macro_export]
 macro_rules! val_name_starter_pattern {
     () => { 'A' ..= 'Z' | 'a' ..= 'z' };
 }
 
+#[macro_export]
 macro_rules! val_name_pattern {
     () => { 'A' ..= 'Z' | 'a' ..= 'z' | '0' ..= '9' | '-' | '_' | ':' | '.' };
 }
 
+#[macro_export]
 macro_rules! quotes_symbol {
     () => {
         '"' | '\''
     };
 }
 
+#[macro_export]
 macro_rules! equal_sign {
     () => {
         '='
     };
 }
 
+#[macro_export]
 macro_rules! html_encoded_start {
     () => {
         '&'
     };
 }
 
+#[macro_export]
 macro_rules! tag_self_closer {
     () => {
         '/'
@@ -59,6 +69,7 @@ macro_rules! tag_self_closer {
 }
 
 /// The characters used to close a tag (>)
+#[macro_export]
 macro_rules! tag_closer {
     () => {
         '>'
@@ -66,6 +77,7 @@ macro_rules! tag_closer {
 }
 
 /// The characters used to open a tag (<)
+#[macro_export]
 macro_rules! tag_opener {
     () => {
         '<'
@@ -73,6 +85,7 @@ macro_rules! tag_opener {
 }
 
 /// A whitespace character (ignored)
+#[macro_export]
 macro_rules! whitespace {
     () => {
         ' ' | '\t' | '\r' | '\n'
@@ -80,6 +93,7 @@ macro_rules! whitespace {
 }
 
 /// Starts special tags such as !DOCTYPE or !-- (comment) --
+#[macro_export]
 macro_rules! special_indicator {
     () => {
         '!'
@@ -93,9 +107,7 @@ pub const __QUICKPARSE: &[&str] = &["script"];
 type Letter = char;
 type CharIter = (usize, Letter);
 
-type Itertype = Peekable<dyn Iterator<Item = CharIter>>;
-
-fn consume_whitespaces<I>(mut characters: Peekable<I>) -> Peekable<I>
+pub(crate) fn consume_whitespaces<I>(mut characters: Peekable<I>) -> Peekable<I>
 where
     I: Iterator<Item = CharIter> + Clone,
 {
@@ -107,7 +119,7 @@ where
 /// and return the number of non-matching elements seen.
 /// Advances the iterator.
 /// After execution, iterator.next() is the first element that matches the predicate
-fn peek_pos_til<I, T, F>(iterator: &mut Peekable<I>, predicate: F) -> Option<usize>
+pub(crate) fn peek_pos_til<I, T, F>(iterator: &mut Peekable<I>, predicate: F) -> Option<usize>
 where
     I: Iterator<Item = T>,
     F: Fn(&T) -> bool,
@@ -133,7 +145,7 @@ where
 /// Given a html-formatted string starting with a tag name, extracts the name and returns a slice.
 /// Works with a peekable iterator of (index, letter) instead of a raw string
 /// Returns an error if the first letter is not a valid name start, or if the EOF is reached before the end of the name
-fn consume_tag_name<I>(
+pub(crate) fn consume_tag_name<I>(
     mut characters: Peekable<I>,
 ) -> Result<(Peekable<I>, usize, usize), ParserError>
 where

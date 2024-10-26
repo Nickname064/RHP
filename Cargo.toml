@@ -6,14 +6,18 @@ edition = "2021"
 [workspace]
 members = [
     "parser",
-    "dom",
-    "marsec"]
+    "dom"
+]
+
+[features]
+default = []
+query_parse = []
+all = ["query_parse"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 parser = { path = "parser" }
 dom = { path = "dom" }
-marsec = { path = "marsec" }
 
 
