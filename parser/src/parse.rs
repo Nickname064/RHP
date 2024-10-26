@@ -537,7 +537,8 @@ pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO :
 
                         let node = HTMLNode::new();
                         let mut node_borrow = node.borrow_mut();
-                        node_borrow.name = String::from(&document[from..to]);
+
+                        node_borrow.name = String::from(&document[from..to]).to_lowercase();
                         let mut closed: bool = false;
 
                         // Parse tag attributes
@@ -568,7 +569,7 @@ pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO :
                                     closed = true;
                                     source.next();
                                 }
-                                Some((_, n)) => {
+                                Some((_, _)) => {
                                     let (_source, attr, val) =
                                         consume_attr_value(source, document)?;
                                     source = _source;
@@ -577,10 +578,39 @@ pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO :
                             }
                         }
 
-                        // We're done editing its attributes, so we can drop the mutable borrow
-                        drop(node_borrow);
-
                         // TODO: Implement sterile tags (like <script>) here
+
+                        if __QUICKPARSE.contains(&node_borrow.name()) {
+                            // Find matching closing tag
+
+                            let i = match source.peek() {
+                                None => {
+                                    return Err(ParserError {
+                                        char: 0,
+                                        error_type: ParserErrorType::UnexpectedEOF,
+                                    })
+                                }
+                                Some((i, _)) => i.clone(),
+                            };
+
+                            match find_word(&mut source, &format!("</{}>", node_borrow.name())) {
+                                None => {
+                                    // The rest of the document is text as a child
+                                    node_borrow.add_text(String::from(&document[i..]));
+                                    drop(node_borrow);
+                                    last_layer.push(HTMLEnum::Node(node));
+                                    return Ok(fold_all(&mut layer_stack, last_layer));
+                                }
+                                Some(index) => {
+                                    // Consume the next index- characters
+                                    node_borrow.add_text(String::from(&document[i..index]));
+                                    drop(node_borrow);
+                                }
+                            }
+                        } else {
+                            // We're done editing its attributes, so we can drop the mutable borrow
+                            drop(node_borrow);
+                        }
 
                         if !closed {
                             // If a node is not self-closed, then all the nodes until the tag end

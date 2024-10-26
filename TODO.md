@@ -1,11 +1,11 @@
 # RHP TODO List
 
-## [ ] Parser
+## [X] Parser
 - [X] Get functional HTML parser
 - [X] Fix bugs with parser consuming wrong tag ends
-- [ ] Add doctypes and comments
-- [ ] Self-closable tags don't HAVE to self-close
-  - TIP : [ ] Rewrite parser to be iterative instead of recursive
+- [X] Add doctypes and comments
+- [X] Self-closable tags don't HAVE to self-close
+  - TIP : [X] Rewrite parser to be iterative instead of recursive
 
 ## [ ] Custom elements
 - [X] Implement basic Custom Elements

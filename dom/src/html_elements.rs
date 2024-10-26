@@ -247,22 +247,6 @@ impl HTMLNode {
     }
 }
 
-impl HTMLEnum {
-    fn fmt(&self, f: &mut Formatter<'_>, _rec_level: usize) -> std::fmt::Result {
-        match self {
-            HTMLEnum::Text(str) => {
-                write!(f, "{}", str)
-            }
-            HTMLEnum::Node(elem) => {
-                write!(f, "{}", elem.borrow())
-            }
-            HTMLEnum::Comment(str) => {
-                write!(f, "<!--{}-->", str)
-            }
-        }
-    }
-}
-
 pub trait PrettyPrintable {
     fn pretty_fmt(&self) -> String {
         self.pretty_fmt_rec(0)
@@ -289,6 +273,7 @@ impl PrettyPrintable for HTMLEnum {
         buf
     }
 }
+
 impl PrettyPrintable for HTMLNode {
     fn pretty_fmt_rec(&self, depth: usize) -> String {
         let mut buf = String::new();
