@@ -37,7 +37,7 @@ macro_rules! val_name_starter_pattern {
 
 #[macro_export]
 macro_rules! val_name_pattern {
-    () => { 'A' ..= 'Z' | 'a' ..= 'z' | '0' ..= '9' | '-' | '_' | ':' | '.' };
+    () => { 'A' ..= 'Z' | 'a' ..= 'z' | '0' ..= '9' | '-' | '_' | ':' | '.' | ',' | '/' };
 }
 
 #[macro_export]
@@ -102,7 +102,7 @@ macro_rules! special_indicator {
 
 /// Some html tags can only have text as a child, meaning we can just skip characters until we find
 /// the matching tag end.
-pub const __QUICKPARSE: &[&str] = &["script"];
+pub const __QUICKPARSE: &[&str] = &["script", "style"];
 
 type Letter = char;
 type CharIter = (usize, Letter);
@@ -248,7 +248,7 @@ where
         characters.next();
     }
 
-    return Ok((characters, (from, to)));
+    Ok((characters, (from, to)))
 }
 
 /// Given a html-formatted string starting with a tag attribute value, extracts the value and returns a slice.
@@ -261,9 +261,8 @@ where
 {
     let mut quoted: Option<Letter> = None;
     let from: usize;
-    let to: usize;
 
-    match characters.nth(0) {
+    match characters.next() {
         Some((i, quotation_mark @ quotes_symbol!())) if quoted.is_none() => {
             quoted = Some(quotation_mark);
             from = i + 1;
@@ -298,12 +297,13 @@ where
     }
 
     let (upper_bound, _) = characters.peek().unwrap();
-    to = *upper_bound;
+    let to: usize = *upper_bound;
 
     if quoted.is_some() {
         characters.next();
     }
-    return Ok((characters, (from, to)));
+
+    Ok((characters, (from, to)))
 }
 
 /// Given a html-formatted string starting with a tag attribute, extracts the attribute, its value, and returns them.
@@ -341,11 +341,11 @@ where
     Ok((characters, attribute, value))
 }
 
-// Closes a HTML Tag, putting all the elements in last_layer as children of that Tag.
-// Takes into account self-closed elements
-// Returns Ok(layer the closed tags belong to) if a tag was closed
-// Returns Err(layer that was supposed to be the tag's children) if no viable parent is found in
-// the layer_stack
+/// Closes a HTML Tag, putting all the elements in last_layer as children of that Tag.
+/// Takes into account self-closed elements
+///
+/// Returns Ok(layer the closed tags belong to) if a tag was closed
+/// Returns Err(layer that was supposed to be the tag's children) if no viable parent is found the layer_stack
 fn fold(
     layer_stack: &mut Vec<(Vec<HTMLEnum>, HTMLNodeRef)>,
     mut last_layer: Vec<HTMLEnum>,
@@ -369,10 +369,10 @@ fn fold(
 }
 
 /*
- * Forcibly folds the entire HTML layer stack
- * layer_stack : list of opened layers, each layer being (contents, opened tag)
- * last_layer : list of elements in the last layer
- */
+* Forcibly folds the entire HTML layer stack
+* layer_stack : list of opened layers, each layer being (contents, opened tag)
+* last_layer : list of elements in the last layer
+*/
 fn fold_all(
     layer_stack: &mut Vec<(Vec<HTMLEnum>, HTMLNodeRef)>,
     mut last_layer: Vec<HTMLEnum>,
@@ -417,75 +417,67 @@ where
 /// ### Errors
 /// Returns an error if anything is incorrect in the document grammar.
 /// For more information, please refer to [ParserError]
-pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO : Make some errors recoverable
-{
+pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> {
+    // TODO: Make some errors recoverable
     let mut source = document.char_indices().peekable();
     let mut layer_stack = vec![];
     let mut last_layer = vec![];
-
     let mut doctype_attributes: Vec<(String, Option<String>)> = vec![];
 
     let is_self_closable = |name: &str| __SELF_CLOSED.contains(&&*name.to_lowercase());
     let mut text_used = true;
-    let mut text_start: usize = 0; //dummy default value. Is instantly overwritten on line 417
+    let mut text_start: usize = 0; // dummy default value. Is instantly overwritten below
 
     loop {
+        // Update text start position if needed
         if text_used {
             text_start = match source.peek() {
-                None => {
-                    return Ok(fold_all(&mut layer_stack, last_layer));
-                }
+                None => return Ok(fold_all(&mut layer_stack, last_layer)),
                 Some((i, _)) => i.clone(),
             };
-
             text_used = true;
         }
 
+        // Find next tag opener
         let tag_start = match source.find(|(_, x)| matches!(x, tag_opener!())) {
             None => {
-                // No tag, meaning everything left in the document is text
+                // No tag found - everything left in the document is text
                 last_layer.push(HTMLEnum::Text(String::from(&document[text_start..])));
-
-                // End the document there, and close unclosed parent tags
                 return Ok(fold_all(&mut layer_stack, last_layer));
             }
             Some((i, _)) => i.clone(),
         };
 
-        //Check if it's a start or an end
+        // Check what comes after the tag opener
         match source.peek() {
             None => {
-                //No more chars after the possible starter, this is a valid EOF, push the rest of the document as text
+                // No more chars after the possible starter - valid EOF
                 last_layer.push(HTMLEnum::Text(String::from(&document[text_start..])));
-
-                // End the document there, and close unclosed parent tags
                 return Ok(fold_all(&mut layer_stack, last_layer));
             }
             Some((_i, _x)) => {
-                let i = _i.clone();
-                let x = _x.clone();
+                let i = *_i;
+                let x = *_x;
 
                 match x {
+                    // Handle tag closures (</tag>)
                     tag_self_closer!() => {
-                        // HANDLE TAG CLOSURES
                         source.next();
                         let (_source, from, to) = consume_tag_name(source)?;
                         source = _source;
 
-                        //Push the text up to that point as text
+                        // Push any text before this tag
                         if tag_start != text_start {
                             last_layer.push(HTMLEnum::Text(String::from(
                                 &document[text_start..tag_start],
                             )));
                         }
 
-                        //Try to see if it matches the previously open tag
                         let closer_name = &document[from..to];
 
-                        //Check that the tag closer correctly closes
+                        // Verify the tag closer ends with '>'
                         match source.next() {
                             None => {
-                                // Reached EOF when tag closer '>' was expected
                                 return Err(ParserError {
                                     char: 0,
                                     error_type: UnexpectedEOF,
@@ -498,23 +490,24 @@ pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO :
                                     error_type: UnexpectedCharacter {
                                         expected: vec!['>'],
                                     },
-                                })
+                                });
                             }
                         }
 
+                        // Find matching opening tag to close
                         loop {
                             match layer_stack.last() {
                                 Some((_, last_node))
                                     if last_node.borrow().name() == closer_name =>
                                 {
-                                    //Matches the previous tag, let's close it
+                                    // Found matching tag - close it
                                     last_layer = fold(&mut layer_stack, last_layer).unwrap();
                                     break;
                                 }
                                 Some((_, last_node))
                                     if is_self_closable(last_node.borrow().name()) =>
                                 {
-                                    //If the previous tag is self-closable, lets close it and try the one before that
+                                    // Previous tag is self-closable - close it and try the one before
                                     last_layer =
                                         fold(&mut layer_stack, last_layer).map_err(|_| {
                                             ParserError {
@@ -524,7 +517,7 @@ pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO :
                                         })?;
                                 }
                                 _ => {
-                                    //Otherwise the tag is just unmatched
+                                    // No matching opening tag found
                                     return Err(ParserError {
                                         char: i,
                                         error_type: UnmatchedClosingTag,
@@ -533,10 +526,10 @@ pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO :
                             }
                         }
                     }
-                    tag_name_starter_pattern!() => {
-                        //TAG NAMES
 
-                        //Push the text up to that point as text
+                    // Handle tag names (<tag>)
+                    tag_name_starter_pattern!() => {
+                        // Push any text before this tag
                         if tag_start != text_start {
                             last_layer.push(HTMLEnum::Text(String::from(
                                 &document[text_start..tag_start],
@@ -549,25 +542,24 @@ pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO :
 
                         let node = HTMLNode::new();
                         let mut node_borrow = node.borrow_mut();
-
                         node_borrow.name = String::from(&document[from..to]).to_lowercase();
                         let mut closed: bool = false;
 
                         // Parse tag attributes
                         loop {
                             source = consume_whitespaces(source);
+
                             match source.peek() {
                                 None => {
                                     return Err(ParserError {
                                         char: 0,
                                         error_type: ParserErrorType::UnexpectedEOF,
-                                    })
+                                    });
                                 }
                                 Some((_, tag_closer!())) => {
                                     source.next();
                                     break;
                                 }
-
                                 Some((i, _)) if closed => {
                                     return Err(ParserError {
                                         char: *i,
@@ -576,7 +568,6 @@ pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO :
                                         },
                                     });
                                 }
-
                                 Some((_, tag_self_closer!())) => {
                                     closed = true;
                                     source.next();
@@ -590,17 +581,14 @@ pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO :
                             }
                         }
 
-                        // TODO: Implement sterile tags (like <script>) here
-
+                        // Handle quick-parse tags (like <script>, <style>)
                         if __QUICKPARSE.contains(&node_borrow.name()) {
-                            // Find matching closing tag
-
                             let i = match source.peek() {
                                 None => {
                                     return Err(ParserError {
                                         char: 0,
                                         error_type: ParserErrorType::UnexpectedEOF,
-                                    })
+                                    });
                                 }
                                 Some((i, _)) => i.clone(),
                             };
@@ -614,42 +602,39 @@ pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO :
                                     return Ok(fold_all(&mut layer_stack, last_layer));
                                 }
                                 Some(index) => {
-                                    // Consume the next index- characters
+                                    // Consume characters up to the closing tag
                                     node_borrow.add_text(String::from(&document[i..index]));
                                     drop(node_borrow);
                                 }
                             }
                         } else {
-                            // We're done editing its attributes, so we can drop the mutable borrow
+                            // Drop the mutable borrow since we're done editing attributes
                             drop(node_borrow);
                         }
 
                         if !closed {
-                            // If a node is not self-closed, then all the nodes until the tag end
-                            // should be its children.
-                            //
-                            // We push the node on the stack to serve as a parent
-
+                            // Node is not self-closed - make it a parent for subsequent nodes
                             layer_stack.push((last_layer, node));
                             last_layer = vec![];
                         } else {
-                            // If a node is self-closed, then we can just consider it complete here
+                            // Node is self-closed - add it to current layer
                             last_layer.push(HTMLEnum::Node(node));
                         }
 
                         continue;
                     }
+
+                    // Handle special indicators (DOCTYPE and comments)
                     special_indicator!() => {
-                        //DOCTYPES and COMMENTS
-                        source.next(); //Skip the !
+                        source.next(); // Skip the '!'
                         let doc = "doctype";
                         let com = "--";
 
                         if com.chars().zip(source.clone()).all(|(x, (_, y))| x == y) {
-                            //COMMENT
+                            // Handle comments
                             source.nth(com.len());
 
-                            //Push the text up to that point as text
+                            // Push any text before this comment
                             if tag_start != text_start {
                                 last_layer.push(HTMLEnum::Text(String::from(
                                     &document[text_start..tag_start],
@@ -658,13 +643,13 @@ pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO :
 
                             match find_word(&mut source.clone(), "-->") {
                                 None => {
-                                    //Unterminated comment, push the entire document
+                                    // Unterminated comment - push the entire remaining document
                                     last_layer
                                         .push(HTMLEnum::Comment(String::from(&document[i + 3..])));
                                     return Ok(fold_all(&mut layer_stack, last_layer));
                                 }
                                 Some(index) => {
-                                    //Push the comment on the stack
+                                    // Push the comment content
                                     last_layer.push(HTMLEnum::Comment(String::from(
                                         &document[i + 3..index],
                                     )));
@@ -675,16 +660,17 @@ pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO :
                         } else if doc.chars().zip(source.clone()).all(|(x, (_, y))| {
                             y.to_lowercase().count() == 1 && y.to_lowercase().nth(0).unwrap() == x
                         }) {
-                            //DOCTYPE
+                            // Handle DOCTYPE
                             source.nth(doc.len());
 
-                            //Push the text up to that point as text
+                            // Push any text before this DOCTYPE
                             if tag_start != text_start {
                                 last_layer.push(HTMLEnum::Text(String::from(
                                     &document[text_start..tag_start],
                                 )));
                             }
 
+                            // Parse DOCTYPE attributes
                             loop {
                                 source = consume_whitespaces(source);
                                 let mut closed: bool = false;
@@ -712,6 +698,7 @@ pub fn parse_html(document: &str) -> Result<Vec<HTMLEnum>, ParserError> //TODO :
                             text_used = false;
                         }
                     }
+
                     _ => {
                         text_used = false;
                     }

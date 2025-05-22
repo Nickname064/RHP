@@ -18,17 +18,10 @@
     - [X] Implement attr-value queries
   - [X] Implement env queries (check parent)
 
-## Language (Marsec)
-- [ ] Add import statement (only import custom selectors)
-- [ ] Add include statement (import selectors and text contents)
   
 ## Dev QOL
 - [X] Improve parser to add error handling
-- [ ] Write Linter and Language Server
   
-## Versatility
-- [ ] Add compatibility with other HTML-like formats (HAML)
-
 
 ## Bug fixes
 

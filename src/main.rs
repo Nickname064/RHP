@@ -16,8 +16,8 @@ fn main() {
                     println!("Source : {}", &str[n.char..n.char + 10])
                 }
             },
-            Err(_) => {
-                panic!("Umm, what the sigma")
+            Err(why) => {
+                panic!("Error reading file: {why:?}")
             }
         }
     }
