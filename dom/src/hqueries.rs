@@ -107,11 +107,7 @@ pub struct HCombinedQuery<const N: usize> {
     children: [(HQuery, HChildType); N],
 }
 
-impl<const N: usize> HCombinedQuery<N> {
-    pub fn get_matching_groups(&self, search_root: &HTMLNode) -> Vec<[HTMLNodeRef; N]> {
-        vec![]
-    }
-}
+impl<const N: usize> HCombinedQuery<N> {}
 
 #[derive(Debug)]
 pub enum HQueryErr {
