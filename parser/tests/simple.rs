@@ -1,6 +1,4 @@
-use std::fs;
-
-use parser::parse::parse_html;
+use parser::{errors::ParserError, parse::parse_html};
 
 #[test]
 fn test_simple_text() {
@@ -28,42 +26,16 @@ fn script() {
 }
 
 #[test]
-fn ytb() {
-    // Open github source file
-
-    const FILE: &str = include_str!(".././tests/sources/youtube_viewer.html");
-
-    let parsed = parse_html(FILE);
-
-    if let Err(ref why) = parsed {
-        eprintln!("{why:?}")
-    }
-
-    assert!(parsed.is_ok());
+fn ytb() -> Result<(), ParserError> {
+    parse_html(include_str!(".././tests/sources/youtube_viewer.html")).map(|_| ())
 }
 
 #[test]
-fn stackoverflow() {
-    const FILE: &str = include_str!(".././tests/sources/stackoverflow.html");
-
-    let parsed = parse_html(FILE);
-
-    if let Err(ref why) = parsed {
-        eprintln!("{why:?}")
-    }
-
-    assert!(parsed.is_ok());
+fn stackoverflow() -> Result<(), ParserError> {
+    parse_html(include_str!(".././tests/sources/stackoverflow.html")).map(|_| ())
 }
 
 #[test]
-fn reflection() {
-    const FILE: &str = include_str!(".././tests/sources/reflection.html");
-
-    let parsed = parse_html(FILE);
-
-    if let Err(ref why) = parsed {
-        eprintln!("{why:?}")
-    }
-
-    assert!(parsed.is_ok());
+fn reflection() -> Result<(), ParserError> {
+    parse_html(include_str!(".././tests/sources/reflection.html")).map(|_| ())
 }

@@ -1,10 +1,10 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ParserError {
     pub char: usize,
     pub error_type: ParserErrorType,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ParserErrorType {
     InvalidAttribute,
     InvalidValue,
